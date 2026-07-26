@@ -1,0 +1,75 @@
+---
+layout: layout.html
+title: Forms
+permalink: forms/index.html
+---
+<h1 class="docs-title">Forms</h1>
+<p class="docs-lead">Compact form controls include visible focus, disabled, help, and invalid states with responsive layout helpers.</p>
+<section class="docs-section">
+  <h2 class="docs-section-title">Project form</h2>
+  <p class="docs-copy">Associate every label and message with its control. Use <span class="text-mono">aria-invalid</span> and <span class="text-mono">aria-describedby</span> for validation.</p>
+  <div class="docs-demo">
+    <div class="docs-preview">
+      <form class="docs-stack">
+        <div class="form-row"><div class="form-group"><label class="form-label" for="project-name">Project name</label><input class="form-input" id="project-name" value="Website redesign"></div><div class="form-group"><label class="form-label" for="project-owner">Owner</label><select class="form-select" id="project-owner"><option>Alex Morgan</option><option>Jamie Chen</option></select></div></div>
+        <div class="form-group"><label class="form-label" for="project-code">Project code</label><input class="form-input" id="project-code" value="website redesign" aria-invalid="true" aria-describedby="project-code-error"><p class="form-error" id="project-code-error">Use letters, numbers, and hyphens only.</p></div>
+        <div class="form-group"><label class="form-label" for="project-notes">Notes</label><textarea class="form-textarea" id="project-notes" placeholder="Add context for the team"></textarea><p class="form-help">Visible to everyone in the project.</p></div>
+        <label class="form-choice"><input class="form-checkbox" type="checkbox" checked> Send a launch notification</label>
+        <div><button class="btn btn-primary" type="button">Save project</button></div>
+      </form>
+    </div>
+    <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;div class="form-group"&gt;
+  &lt;label class="form-label" for="name"&gt;Project name&lt;/label&gt;
+  &lt;input class="form-input" id="name" aria-describedby="name-help"&gt;
+  &lt;p class="form-help" id="name-help"&gt;Visible to the team.&lt;/p&gt;
+&lt;/div&gt;</code></div>
+  </div>
+</section>
+<section class="docs-section">
+  <h2 class="docs-section-title">Checkboxes and radio buttons</h2>
+  <p class="docs-copy">Group related choices with a fieldset and legend. Use checkboxes for independent options and radio buttons for one choice from a set.</p>
+  <div class="docs-demo">
+    <div class="docs-preview form-row">
+      <fieldset class="form-group">
+        <legend class="form-label">Notifications</legend>
+        <label class="form-choice"><input class="form-checkbox" type="checkbox" checked> Ticket updates</label>
+        <label class="form-choice"><input class="form-checkbox" type="checkbox"> File uploads</label>
+        <label class="form-choice"><input class="form-checkbox" type="checkbox" disabled> Weekly summary</label>
+        <p class="form-help">Choose any notifications you want to receive.</p>
+      </fieldset>
+      <fieldset class="form-group">
+        <legend class="form-label">Default view</legend>
+        <label class="form-choice"><input class="form-radio" type="radio" name="default-view" checked> List</label>
+        <label class="form-choice"><input class="form-radio" type="radio" name="default-view"> Calendar</label>
+        <label class="form-choice"><input class="form-radio" type="radio" name="default-view"> Activity</label>
+      </fieldset>
+    </div>
+    <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;fieldset class="form-group"&gt;
+  &lt;legend class="form-label"&gt;Default view&lt;/legend&gt;
+  &lt;label class="form-choice"&gt;
+    &lt;input class="form-radio" type="radio" name="view" checked&gt; List
+  &lt;/label&gt;
+  &lt;label class="form-choice"&gt;
+    &lt;input class="form-radio" type="radio" name="view"&gt; Calendar
+  &lt;/label&gt;
+&lt;/fieldset&gt;</code></div>
+  </div>
+</section>
+<section class="docs-section">
+  <h2 class="docs-section-title">Control states</h2>
+  <p class="docs-copy">Native disabled attributes and semantic validation attributes provide the visual state without JavaScript-specific classes.</p>
+  <div class="docs-demo">
+    <div class="docs-preview form-row">
+      <div class="form-group"><label class="form-label" for="disabled-field">Disabled</label><input class="form-input" id="disabled-field" value="Read-only project code" disabled></div>
+      <div class="form-group"><label class="form-label" for="invalid-field">Invalid</label><input class="form-input" id="invalid-field" value="Invalid value" aria-invalid="true" aria-describedby="invalid-field-error"><p class="form-error" id="invalid-field-error">Correct this value before saving.</p></div>
+    </div>
+    <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;input class="form-input" disabled&gt;
+&lt;input class="form-input" aria-invalid="true" aria-describedby="field-error"&gt;
+&lt;p class="form-error" id="field-error"&gt;Correct this value.&lt;/p&gt;</code></div>
+  </div>
+</section>
+<section class="docs-section">
+  <h2 class="docs-section-title">Compact and inline</h2>
+  <p class="docs-copy">Add <span class="text-mono">form-compact</span> to a parent to reduce its input, select, and textarea density.</p>
+  <div class="docs-demo"><div class="docs-preview"><div class="form-inline form-compact"><div class="form-group"><label class="form-label" for="filter-status">Status</label><select class="form-select" id="filter-status"><option>All statuses</option></select></div><div class="form-group"><label class="form-label" for="filter-query">Search</label><input class="form-input" id="filter-query" placeholder="Filter projects"></div><button class="btn btn-secondary btn-sm" type="button">Apply</button></div></div><div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;div class="form-inline form-compact"&gt;…&lt;/div&gt;</code></div></div>
+</section>

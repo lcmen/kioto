@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Kioto is a compact application UI toolkit for Tailwind CSS v4.">
+  <title>{% if title %}{{ title }} — {% endif %}Kioto</title>
+  <link rel="stylesheet" href="{{ '/assets/index.css' | url }}">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script defer src="{{ '/assets/docs.js' | url }}"></script>
+</head>
+<body class="page-shell">
+  <div class="docs-layout" x-data="{ navigationOpen: false }">
+    <button class="btn btn-secondary btn-icon docs-menu" type="button" aria-label="Open documentation navigation" @click="navigationOpen = true">☰</button>
+    <div class="docs-backdrop" x-cloak x-show="navigationOpen" @click="navigationOpen = false"></div>
+    {% include "nav.html" %}
+    <div class="docs-content">
+      <main class="docs-main">
+        {{ content }}
+      </main>
+      <footer class="docs-footer">
+        Kioto is CSS-only, built for Tailwind CSS v4, and released under the MIT License.
+      </footer>
+    </div>
+  </div>
+</body>
+</html>

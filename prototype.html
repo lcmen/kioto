@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foundry — self-hosted project HQ</title>
+<link rel="stylesheet" href="https://unpkg.com/@37signals/lexxy@latest/dist/stylesheets/lexxy.css">
+<script type="module">
+  try { window.Lexxy = await import("https://esm.sh/@37signals/lexxy@latest"); }
+  catch (e) { console.warn("Lexxy failed to load", e); }
+</script>
+<style>
+  :root {
+    --blue: #1c6cb3; --blue-dark: #17568f; --blue-darker: #124b7d;
+    --page: #f7f8f9; --ink: #333a40; --ink-soft: #7c858c;
+    --line: #e4e7e9; --line-strong: #d3d8db; --link: #1c6cb3;
+    --radius: 4px;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+    --milestone: #e8871e; --ticket: #7ca63c; --notebook: #b062a8;
+    --file: #cc3b30; --repo: #4a90c4; --time: #3aa08a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--sans); background: var(--page); color: var(--ink); font-size: 13px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  a { color: var(--link); text-decoration: none; cursor: pointer; }
+  a:hover { text-decoration: underline; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; }
+  input, select, textarea { font-family: inherit; font-size: 13px; }
+
+  header { background: var(--blue); color: #fff; }
+  .hbar { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+  .htop { display: flex; align-items: center; height: 48px; gap: 14px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; cursor: pointer; color: #fff; }
+  .logo:hover { text-decoration: none; opacity: .92; }
+  .logo .mk { width: 22px; height: 22px; background: #fff; color: var(--blue); border-radius: 5px; display: grid; place-items: center; }
+
+  .timerpill { margin-left: 8px; display: flex; align-items: center; gap: 8px; background: var(--blue-dark); border: 1px solid rgba(255,255,255,.18); border-radius: 20px; padding: 3px 5px 3px 6px; color: #fff; font-size: 12.5px; }
+  .timerpill .dot { width: 7px; height: 7px; border-radius: 50%; background: #9fb4c7; flex-shrink: 0; margin-left:5px;}
+  .timerpill.run .dot { background: #6ee0a0; animation: pulse 1.4s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  .timerpill .selbtn { background: transparent; color: #fff; border: none; border-radius: 20px; padding: 5px 8px; cursor: pointer; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .timerpill .selbtn:hover { background: rgba(255,255,255,.12); }
+  .timerpill .clock { font-family: var(--mono); font-weight: 600; letter-spacing: .5px; min-width: 58px; text-align: right; }
+  .timerpill button.play { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: var(--time); flex-shrink: 0; }
+  .timerpill button.play.stop { background: var(--file); }
+  .timerpill button.play:hover { filter: brightness(1.08); }
+
+  .htools { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+  .htools button.ic { width: 32px; height: 32px; border-radius: var(--radius); background: var(--blue-dark); color: #fff; display: grid; place-items: center; position: relative; }
+  .htools button.ic:hover { background: var(--blue-darker); }
+  .htools .bell-count { position: absolute; top: -4px; right: -4px; background: #fff; color: var(--blue); font-size: 10px; font-weight: 700; border-radius: 20px; padding: 0 4px; min-width: 15px; text-align: center; }
+
+  .projbar { display: none; }
+  .projbar.on { display: block; }
+  .backlink { color: #cfe2f2; font-size: 12px; padding: 4px 0 6px; display: inline-flex; align-items: center; gap: 4px; }
+  .backlink:hover { color: #fff; text-decoration: none; }
+  .hmidrow { display: flex; align-items: flex-end; width: 100%; }
+  .ptitle { font-size: 22px; font-weight: 700; padding: 2px 0 12px; display: flex; align-items: center; gap: 12px; }
+  .headstack { display: flex; align-items: center; }
+  .headstack .avatar { width: 24px; height: 24px; margin-left: -6px; border: 2px solid var(--blue); }
+  .headstack .avatar:first-child { margin-left: 0; }
+  .tabs { margin-left: auto; display: flex; align-self: flex-end; }
+  .tabs button { color: #cfe2f2; padding: 10px 15px; font-size: 13px; font-weight: 500; border-radius: var(--radius) var(--radius) 0 0; }
+  .tabs button:hover { color: #fff; background: var(--blue-dark); }
+  .tabs button.active { background: var(--page); color: var(--ink); font-weight: 600; }
+
+  /* workspace-home title strip (no gray subhead anymore) */
+  .homehead { max-width: 1080px; margin: 0 auto; padding: 20px 16px 0; display: flex; align-items: center; justify-content: space-between; }
+  .homehead h1 { font-size: 20px; font-weight: 700; }
+  .homehead .hh-left { display: flex; align-items: center; gap: 16px; }
+  .homehead .rt { display: flex; gap: 8px; }
+  .homehead.hidden { display: none; }
+  .seg { display: flex; }
+  .seg button { padding: 6px 14px; font-size: 12.5px; border: 1px solid var(--line-strong); background: #fff; color: var(--ink-soft); }
+  .seg button:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+  .seg button:last-child { border-radius: 0 var(--radius) var(--radius) 0; border-left: none; }
+  .seg button.on { background: var(--blue); color: #fff; border-color: var(--blue-dark); }
+  /* due chip */
+  .due-chip { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 4px 0 10px; border-radius: 20px; font-size: 12px; font-weight: 500; background: #eef2f5; color: var(--ink); box-sizing: border-box; }
+  .due-chip.overdue { background: #fbe6e4; color: var(--file); }
+  .due-chip.soon { background: #f7ecd6; color: #a06d1e; }
+  .due-set { cursor: pointer; }
+  .due-set:hover { filter: brightness(.97); }
+  .due-clear { display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; color: inherit; opacity: .55; font-size: 14px; line-height: 1; }
+  .due-clear:hover { opacity: 1; background: rgba(0,0,0,.08); }
+  .due-input { height: 24px; padding: 0 8px; border: 1px solid var(--blue); border-radius: 20px; font-size: 12px; background: #fff; box-sizing: border-box; }
+  .due-input:focus { outline: none; box-shadow: 0 0 0 3px rgba(28,108,179,.12); }
+  /* calendar */
+  .calnav { width: 26px; height: 26px; border-radius: var(--radius); border: 1px solid var(--line-strong); background: #fff; color: var(--ink); font-size: 15px; line-height: 1; }
+  .calnav:hover { border-color: var(--blue); color: var(--blue); }
+  .callegend { gap: 14px; }
+  .lg { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--ink-soft); }
+  .lg-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .cal .cah { padding: 8px; text-align: center; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; color: var(--ink-soft); font-weight: 700; border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); background: #fafbfb; }
+  .cal .cah:nth-child(7n) { border-right: none; }
+  .cal .cell { min-height: 96px; padding: 6px 7px; border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); font-size: 12px; position: relative; overflow: hidden; }
+  .cal .cell:nth-child(7n) { border-right: none; }
+  .cal .cell.out { background: #fafbfb; color: var(--line-strong); }
+  .cal .cell.today { background: #f0f6fc; }
+  .cal .cell .dnum { font-weight: 600; color: var(--ink-soft); margin-bottom: 4px; }
+  .cal .cell.today .dnum { color: var(--blue); }
+  .cal .ev { display: flex; align-items: center; gap: 5px; padding: 2px 4px; border-radius: 3px; margin-bottom: 3px; font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: default; }
+  .cal .ev .bar { width: 3px; align-self: stretch; border-radius: 2px; flex-shrink: 0; }
+  .cal .ev.due { background: #eef4fb; }
+  .cal .ev.event { background: #f5e7f3; color: #7a4a72; }
+  .cal .ev.event .ic { color: var(--notebook); }
+  .cal .time-badge { position: absolute; right: 6px; bottom: 5px; font-family: var(--mono); font-size: 10.5px; font-weight: 600; color: var(--time); background: #e1f2ee; padding: 1px 5px; border-radius: 10px; }
+  .searchfield { height: 32px; background: var(--blue-dark); border: 1px solid rgba(255,255,255,.25); color: #fff; border-radius: var(--radius); padding: 0 10px; width: 200px; }
+  .searchfield::placeholder { color: #bcd0e4; }
+  .searchfield:focus { outline: none; border-color: #fff; background: var(--blue-darker); }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 16px 16px 60px; }
+  .cols { display: grid; grid-template-columns: 1fr 250px; gap: 28px; align-items: start; }
+  .level { display: none; }
+  .level.on { display: block; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); }
+  .card + .card { margin-top: 16px; }
+  .card-h { padding: 11px 14px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; background: #fafbfb; border-radius: var(--radius) var(--radius) 0 0; }
+  .card-h h3 { font-size: 13px; font-weight: 700; }
+  .card-h .rt { display: flex; align-items: center; gap: 12px; }
+  /* when a card header sits directly above a table, merge into one header band */
+  .card-h + table thead th { border-top: none; }
+  .card-h:has(+ table) { border-bottom: none; padding-bottom: 8px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; color: var(--ink-soft); font-weight: 700; padding: 9px 14px; border-bottom: 1px solid var(--line); background: #fafbfb; }
+  /* merged homepage header: title row + column labels in one block */
+  .toprow { padding: 11px 14px; display: flex; align-items: center; justify-content: space-between; background: #fafbfb; border-radius: var(--radius) var(--radius) 0 0; }
+  .toprow h3 { font-size: 13px; font-weight: 700; }
+  tbody td { padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 13px; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #fafbfb; }
+  tbody tr.clickable { cursor: pointer; }
+  .mono { font-family: var(--mono); font-size: 12px; }
+  tfoot td { padding: 10px 14px; font-weight: 700; background: #fafbfb; border-top: 1px solid var(--line-strong); }
+  .pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .pill.green { background: #e8f0e0; color: #5a7a2e; }
+  .pill.gray { background: #eceef0; color: var(--ink-soft); }
+  .pill.amber { background: #f7ecd6; color: #a06d1e; }
+  .pill.open { background: #e2eefb; color: var(--blue); }
+  .pill.res { background: #e8f0e0; color: #5a7a2e; }
+
+  .avatar { width: 20px; height: 20px; border-radius: 50%; background: var(--blue); color: #fff; display: grid; place-items: center; font-size: 9px; font-weight: 700; flex-shrink: 0; }
+
+  .proj-row td .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; }
+  .prog { height: 6px; width: 90px; background: var(--line); border-radius: 20px; overflow: hidden; }
+  .prog span { display: block; height: 100%; background: var(--blue); }
+  .client-group { padding: 8px 14px 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--ink-soft); font-weight: 700; background: #fafbfb; border-bottom: 1px solid var(--line); border-top: 1px solid var(--line); }
+  tr:first-child td.client-group { border-top: none; }
+  td.client-group a { float: right; text-transform: none; letter-spacing: 0; font-weight: 500; }
+
+  .rail .rblock { margin-bottom: 22px; }
+  .rail h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--ink-soft); font-weight: 700; margin-bottom: 8px; }
+  .rail .kv { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .rail .kv:last-child { border-bottom: none; }
+  .rail .kv b { font-weight: 600; }
+  .budget .bar { height: 7px; background: var(--line); border-radius: 20px; overflow: hidden; margin-top: 5px; }
+  .budget .bar span { display: block; height: 100%; background: var(--time); }
+  .rail .settings a { display: block; padding: 5px 0; }
+
+  .feed-item { display: flex; gap: 11px; padding: 10px 14px; border-bottom: 1px solid var(--line); align-items: flex-start; }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-ic { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; margin-top: 1px; }
+  .feed-ic svg { width: 12px; height: 12px; }
+  .feed-body { font-size: 13px; min-width: 0; }
+  .feed-body .meta { color: var(--ink-soft); font-size: 12px; }
+  .kind-ticket { background: #eef4e2; color: #5a7a2e; }
+  .kind-notebook { background: #f5e7f3; color: var(--notebook); }
+  .kind-file { background: #fbe6e4; color: var(--file); }
+  .kind-repo { background: #e6f0f8; color: var(--repo); }
+  .kind-time { background: #e1f2ee; color: var(--time); }
+
+  .filerow td .fic, .folderrow td .fic { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 4px; color: #fff; margin-right: 9px; vertical-align: middle; font-size: 12px; }
+  .folderrow td .fic { background: transparent; color: var(--milestone); }
+  .folderrow { cursor: pointer; }
+  .folderrow td:first-child a { font-weight: 600; }
+
+  .tdetail { display: grid; grid-template-columns: 1fr 240px; gap: 20px; align-items: start; }
+  .tdesc { color: #55606a; font-size: 13.5px; line-height: 1.65; }
+  .subhead-lite { font-size: 13px; font-weight: 700; margin: 22px 0 8px; }
+  .checklist { list-style: none; }
+  .checklist li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--time); cursor: pointer; flex-shrink: 0; }
+  .checklist li.done label { text-decoration: line-through; color: var(--ink-soft); }
+  .checklist label { cursor: pointer; flex: 1; }
+  .add-item { display: flex; gap: 8px; padding: 10px 0 0; }
+  .add-item input { flex: 1; padding: 7px 10px; border: 1px solid var(--line-strong); border-radius: var(--radius); }
+  .checkbar { height: 6px; background: var(--line); border-radius: 20px; overflow: hidden; margin: 4px 0 2px; }
+  .checkbar span { display: block; height: 100%; background: var(--time); transition: width .2s; }
+  .comment { display: flex; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .comment:last-child { border-bottom: none; }
+  .comment .c-body b { font-weight: 700; } .comment .c-body .meta { color: var(--ink-soft); font-size: 12px; }
+  .comment .c-body p { margin-top: 3px; color: #55606a; }
+  .cmt-compose { margin-top: 4px; }
+  .icon-btn { padding: 0 10px; color: var(--ink-soft); }
+  .icon-btn:hover { color: var(--blue); }
+  .cmt-staged { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .cmt-staged:empty { margin-top: 0; }
+  .cmt-atts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .file-chip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 6px 0 9px; background: #f2f4f6; border: 1px solid var(--line); border-radius: var(--radius); font-size: 12px; color: var(--ink); max-width: 220px; }
+  a.file-chip { cursor: pointer; } a.file-chip:hover { border-color: var(--blue); color: var(--blue); }
+  .file-chip svg { color: var(--ink-soft); flex-shrink: 0; }
+  .file-chip .fn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-chip .fsz { color: var(--ink-soft); flex-shrink: 0; font-family: var(--mono); font-size: 11px; }
+
+  /* time sessions */
+  .sessions { border: 1px solid var(--line); border-radius: var(--radius); }
+  .sessions .srow { display: grid; grid-template-columns: 1fr 1fr auto auto auto; gap: 8px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+  .sessions .srow:last-child { border-bottom: none; }
+  .sessions .srow.head { background: #fafbfb; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; color: var(--ink-soft); font-weight: 700; }
+  .sessions .srow .dur { font-family: var(--mono); font-weight: 600; }
+  .sessions .del { color: var(--file); cursor: pointer; font-size: 12px; }
+  .sessions .del:hover { text-decoration: underline; }
+  .sessions .running-tag { color: var(--time); font-weight: 600; }
+
+  .clink { cursor: pointer; border-radius: 3px; padding: 2px 4px; margin: -2px -4px; transition: background .12s; }
+  .clink:hover { background: #eef2f5; }
+  .inline-sel { height: 26px; padding: 0 6px; border: 1px solid var(--blue); border-radius: var(--radius); font-size: 12.5px; background: #fff; box-sizing: border-box; vertical-align: middle; }
+  .inline-sel:focus { outline: none; box-shadow: 0 0 0 3px rgba(28,108,179,.12); }
+  /* unified badge size for status pill + assignee chips */
+  .badge-sz { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 20px; font-size: 12px; font-weight: 600; box-sizing: border-box; cursor: pointer; }
+  .assignees { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chip-a { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 4px 0 10px; background: #eef2f5; border-radius: 20px; font-size: 12px; font-weight: 500; box-sizing: border-box; max-width: 100%; }
+  .chip-a .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chip-x { display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; color: var(--ink-soft); font-size: 14px; line-height: 1; flex-shrink: 0; }
+  .chip-x:hover { background: #dbe0e4; color: var(--ink); }
+  .chip-add { display: inline-flex; align-items: center; justify-content: center; height: 24px; padding: 0 10px; border-radius: 20px; border: 1px dashed var(--line-strong); color: var(--ink-soft); font-size: 12px; box-sizing: border-box; }
+  .chip-add:hover { border-color: var(--blue); color: var(--blue); }
+  /* inline rounded select (status / assignee), matches due input */
+  .rounded-select { height: 24px; padding: 0 8px; border: 1px solid var(--blue); border-radius: 20px; font-size: 12px; background: #fff; box-sizing: border-box; cursor: pointer; }
+  .rounded-select:focus { outline: none; box-shadow: 0 0 0 3px rgba(28,108,179,.12); }
+  /* details rows */
+  .td-details .kv { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; gap: 12px; min-height: 42px; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .td-details .kv.col { flex-direction: column; align-items: stretch; gap: 8px; }
+  .td-details .kv.col .k { padding-top: 0; }
+  .td-details .kv:last-child { border-bottom: none; }
+  .td-details .kv b { font-weight: 600; }
+  .td-details .kv .k { color: var(--ink-soft); flex: 0 0 auto; white-space: nowrap; }
+  .td-details .kv .v { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; justify-content: flex-end; text-align: right; min-height: 24px; }
+
+  .lexy { padding: 22px 26px; }
+  .lexy .doc-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .lexy .doc-meta { color: var(--ink-soft); font-size: 12px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+  .lexy p { margin-bottom: 12px; color: #444b52; line-height: 1.7; }
+  .lexy h2 { font-size: 16px; margin: 20px 0 8px; }
+  .lexy ul { margin: 0 0 12px 20px; color: #444b52; }
+  .lexy code { font-family: var(--mono); background: #f0f2f3; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  .lexy-note { margin-top: 18px; padding: 10px 12px; background: #f5e7f3; border-radius: var(--radius); font-size: 12px; color: #7a4a72; }
+  lexxy-editor { display: block; min-height: 300px; border: 1px solid var(--line-strong); border-radius: var(--radius); }
+  .note-tools { display: flex; gap: 12px; }
+
+  .modal-bg { position: fixed; inset: 0; background: rgba(20,30,40,.45); display: none; align-items: flex-start; justify-content: center; padding: 60px 16px; z-index: 50; }
+  .modal-bg.open { display: flex; }
+  .modal { background: #fff; border-radius: 6px; width: 100%; max-width: 460px; box-shadow: 0 12px 40px rgba(0,0,0,.25); overflow: hidden; }
+  .modal-h { padding: 14px 18px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+  .modal-h h3 { font-size: 15px; font-weight: 700; }
+  .modal-h .x { color: var(--ink-soft); font-size: 20px; line-height: 1; }
+  .modal-b { padding: 18px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #4a545c; }
+  .field input, .field select, .field textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: var(--radius); }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(28,108,179,.12); }
+  .field.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field.row2 label { grid-column: span 2; }
+  .modal-f { padding: 14px 18px; background: #fafbfb; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 8px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; background: #fff; color: var(--ink); border: 1px solid var(--line-strong); padding: 8px 13px; border-radius: var(--radius); font-size: 13px; font-weight: 500; }
+  .btn:hover { background: #f4f5f6; border-color: #bfc5c9; text-decoration: none; }
+  .btn.primary { background: var(--blue); color: #fff; border-color: var(--blue-dark); }
+  .btn.primary:hover { background: var(--blue-dark); }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 6px; font-size: 13px; opacity: 0; transition: all .25s; z-index: 60; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 860px) {
+    .cols, .tdetail { grid-template-columns: 1fr; }
+    .rail { display: none; }
+    .tabs { display: none; }
+    .timerpill .selbtn { max-width: 120px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hbar">
+    <div class="htop">
+      <a class="logo" onclick="goHome()"><span class="mk"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 9l9-6 9 6v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></span> Foundry</a>
+
+      <div class="timerpill" id="pill">
+        <span class="dot"></span>
+        <button class="selbtn" id="pillSel" onclick="openTimerModal()">Select a ticket…</button>
+        <span class="clock" id="pillClock">0:00:00</span>
+        <button class="play" id="pillBtn" onclick="pillClick()" title="Start timer"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" id="pillIc"><path d="M8 5v14l11-7z"/></svg></button>
+      </div>
+
+      <div class="htools">
+        <button class="ic" id="searchBtn" title="Search" onclick="toggleSearch()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></button>
+        <input id="searchInput" class="searchfield" placeholder="Search…" style="display:none">
+        <button class="ic" title="Notifications"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/></svg><span class="bell-count">3</span></button>
+      </div>
+    </div>
+
+    <div class="projbar" id="projbar">
+      <a class="backlink" onclick="goHome()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg> All projects</a>
+      <div class="hmidrow">
+        <span class="ptitle"><span id="projName">ConnectWise sync</span></span>
+        <nav class="tabs">
+          <button class="active" data-view="overview">Overview</button>
+          <button data-view="tickets">Tickets</button>
+          <button data-view="files">Files</button>
+          <button data-view="notebook">Notebook</button>
+          <button data-view="pcalendar">Calendar</button>
+        </nav>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="homehead" id="homehead">
+  <div class="hh-left"><h1 id="homeTitle">All projects</h1>
+    <div class="seg" id="homeSeg"><button class="on" onclick="homeView('projects')">Projects</button><button onclick="homeView('calendar')">Calendar</button></div>
+  </div>
+  <div class="rt" id="homeActions"><button class="btn" onclick="openModal('client')">+ New client</button><button class="btn primary" onclick="openModal('proj')">+ New project</button></div>
+</div>
+
+<div class="wrap">
+
+  <!-- WORKSPACE HOME -->
+  <div class="level on" id="workspace">
+    <div id="ws_projects">
+    <div class="cols">
+      <div>
+        <div class="card">
+          <table>
+            <thead><tr><th>Project</th><th>Open</th><th>Progress</th><th>This week</th></tr></thead>
+            <tbody id="projBody">
+              <tr><td class="client-group" colspan="4"><span>Northwind MSP</span></td></tr>
+              <tr class="proj-row"><td><span class="dot" style="background:var(--blue)"></span><a onclick="openProject('ConnectWise sync','Northwind MSP')">ConnectWise sync</a></td><td>4</td><td><div class="prog"><span style="width:88%"></span></div></td><td class="mono">12.5h</td></tr>
+              <tr class="proj-row"><td><span class="dot" style="background:#4a90c4"></span><a onclick="openProject('Ticket sync add-on','Northwind MSP')">Ticket sync add-on</a></td><td>1</td><td><div class="prog"><span style="width:30%"></span></div></td><td class="mono">3.0h</td></tr>
+              <tr><td class="client-group" colspan="4"><span>Acme Learning</span></td></tr>
+              <tr class="proj-row"><td><span class="dot" style="background:#7ca63c"></span><a onclick="openProject('BrainSpark redesign','Acme Learning')">BrainSpark redesign</a></td><td>7</td><td><div class="prog"><span style="width:72%"></span></div></td><td class="mono">9.0h</td></tr>
+              <tr><td class="client-group" colspan="4"><span>Harbor IT</span></td></tr>
+              <tr class="proj-row"><td><span class="dot" style="background:#cc3b30"></span><a onclick="openProject('Autotask migration','Harbor IT')">Autotask migration</a></td><td>2</td><td><div class="prog"><span style="width:20%"></span></div></td><td class="mono">2.5h</td></tr>
+              <tr><td class="client-group" colspan="4"><span>Internal</span></td></tr>
+              <tr class="proj-row"><td><span class="dot" style="background:#e8871e"></span><a onclick="openProject('MergeDeck v2','Internal')">MergeDeck v2</a></td><td>3</td><td><div class="prog"><span style="width:45%"></span></div></td><td class="mono">6.0h</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><h3>Time this week — all projects</h3><a onclick="openModal('time')">+ Add time manually</a></div>
+          <table>
+            <thead><tr><th>Project</th><th>Task</th><th>Date</th><th>Duration</th><th>Billable</th></tr></thead>
+            <tbody id="weekTimeBody">
+              <tr><td>ConnectWise sync</td><td>OAuth debugging</td><td class="mono">Jul 24</td><td class="mono">3:40</td><td><span class="pill green">Billable</span></td></tr>
+              <tr><td>BrainSpark redesign</td><td>Signup form</td><td class="mono">Jul 24</td><td class="mono">2:15</td><td><span class="pill green">Billable</span></td></tr>
+              <tr><td>MergeDeck v2</td><td>Sprint planning</td><td class="mono">Jul 23</td><td class="mono">1:00</td><td><span class="pill gray">Internal</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <aside class="rail">
+        <div class="rblock"><h4>This week</h4><div class="kv"><span>Tracked</span><b>38.5h</b></div><div class="kv"><span>Billable</span><b>31.0h</b></div><div class="kv"><span>Unbilled</span><b>€4,280</b></div></div>
+      </aside>
+    </div>
+    </div><!-- /ws_projects -->
+
+    <div id="ws_calendar" style="display:none">
+      <div class="card">
+        <div class="card-h">
+          <div class="rt"><button class="calnav" onclick="calShift(-1)">‹</button><h3 id="calLabel">July 2026</h3><button class="calnav" onclick="calShift(1)">›</button></div>
+          <div class="rt callegend">
+            <span class="lg"><span class="lg-dot" style="background:var(--blue)"></span>Due</span>
+            <span class="lg"><span class="lg-dot" style="background:var(--notebook)"></span>Event</span>
+            <span class="lg"><span class="lg-dot" style="background:var(--time)"></span>Time</span>
+            <a onclick="openModal('event')">+ New event</a>
+          </div>
+        </div>
+        <div class="cal" id="calGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SINGLE PROJECT -->
+  <div class="level" id="project">
+
+    <section class="view active" id="overview">
+      <div class="cols">
+        <div>
+          <div class="card">
+            <div class="card-h"><h3>In progress</h3><a onclick="setView('tickets')">All tickets</a></div>
+            <table><tbody>
+              <tr class="clickable" onclick="openTicket('#3')"><td class="mono">#3</td><td>OAuth token refresh fails intermittently</td><td><span class="pill open">In Progress</span></td><td>Adam C</td></tr>
+              <tr class="clickable" onclick="openTicket('#2')"><td class="mono">#2</td><td>Add rate-limiting to public API</td><td><span class="pill open">Accepted</span></td><td>Dan Q</td></tr>
+            </tbody></table>
+          </div>
+          <div class="card">
+            <div class="card-h"><h3>Recent activity</h3><a onclick="toast('Full activity log')">View all</a></div>
+            <div>
+              <div class="feed-item"><span class="feed-ic kind-ticket"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span><div class="feed-body"><div><b>Charlie S</b> resolved <a onclick="openTicket('#4')" class="mono">#4</a> Allow users to signup</div><div class="meta">11:07 · status In Progress → Completed</div></div></div>
+              <div class="feed-item"><span class="feed-ic kind-time"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div class="feed-body"><div><b>Charlie S</b> logged <span class="mono">2:15</span> on <span class="mono">#4</span></div><div class="meta">11:07</div></div></div>
+              <div class="feed-item"><span class="feed-ic kind-notebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span><div class="feed-body"><div><b>Adam C</b> updated <a onclick="openNote('Moonrope Documentation')">Moonrope Documentation</a></div><div class="meta">11:06</div></div></div>
+            </div>
+          </div>
+        </div>
+        <aside class="rail">
+          <div class="rblock"><h4>Client</h4><div class="kv"><span id="railClient">Northwind MSP</span><a onclick="toast('View client')">View</a></div></div>
+          <div class="rblock"><h4>Tickets</h4><div class="kv"><span>Open</span><b>4</b></div><div class="kv"><span>In progress</span><b>1</b></div><div class="kv"><span>Resolved</span><b>18</b></div></div>
+          <div class="rblock"><h4>Hours this week</h4><div class="budget"><div class="kv" style="border:none;padding-bottom:2px"><span>12.5h of 20h</span><b>63%</b></div><div class="bar"><span style="width:63%"></span></div></div></div>
+          <div class="rblock"><h4>Project</h4><div class="settings"><a onclick="toast('Edit properties')">Edit properties</a><a onclick="toast('Manage people')">Manage people</a><a onclick="toast('Archive project')">Archive project</a></div></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="view" id="tickets">
+      <div class="card">
+        <div class="card-h"><h3>Tickets</h3><a onclick="openModal('ticket')">+ New ticket</a></div>
+        <table>
+          <thead><tr><th>#</th><th>Summary</th><th>Status</th><th>Assignee</th><th>Time logged</th></tr></thead>
+          <tbody id="ticketBody">
+            <tr class="clickable" onclick="openTicket('#3')"><td class="mono">#3</td><td>OAuth token refresh fails intermittently</td><td><span class="pill open">In Progress</span></td><td>Adam C</td><td class="mono">3:40</td></tr>
+            <tr class="clickable" onclick="openTicket('#2')"><td class="mono">#2</td><td>Add rate-limiting to public API</td><td><span class="pill open">Accepted</span></td><td>Dan Q</td><td class="mono">1:15</td></tr>
+            <tr class="clickable" onclick="openTicket('#6')"><td class="mono">#6</td><td>Webhook retries pile up on 503</td><td><span class="pill open">Open</span></td><td>—</td><td class="mono">0:00</td></tr>
+            <tr class="clickable" onclick="openTicket('#4')"><td class="mono">#4</td><td>Allow users to signup for the application</td><td><span class="pill res">Resolved</span></td><td>Charlie S</td><td class="mono">6:20</td></tr>
+            <tr class="clickable" onclick="openTicket('#1')"><td class="mono">#1</td><td>Set up CI on Travis</td><td><span class="pill res">Resolved</span></td><td>Adam C</td><td class="mono">2:00</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-h"><h3>Time entries — this project</h3><a onclick="openModal('time')">+ Add time manually</a></div>
+        <table>
+          <thead><tr><th>Who</th><th>Ticket</th><th>Description</th><th>Date</th><th>Duration</th><th>Billable</th></tr></thead>
+          <tbody id="timeBody">
+            <tr><td>You</td><td class="mono">#3</td><td>Token refresh repro</td><td class="mono">Jul 24</td><td class="mono">3:40</td><td><span class="pill green">Billable</span></td></tr>
+            <tr><td>Kasia</td><td class="mono">#2</td><td>Rate-limit middleware</td><td class="mono">Jul 24</td><td class="mono">1:15</td><td><span class="pill green">Billable</span></td></tr>
+            <tr><td>Charlie S</td><td class="mono">#4</td><td>Signup form + validation</td><td class="mono">Jul 22</td><td class="mono">2:15</td><td><span class="pill green">Billable</span></td></tr>
+          </tbody>
+          <tfoot><tr><td colspan="4">Total</td><td class="mono" id="projTimeTotal">0:00</td><td></td></tr></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- Ticket detail -->
+    <section class="view" id="ticketDetail">
+      <div class="card">
+        <div class="card-h"><h3 id="td_title">#3 — OAuth token refresh</h3><a onclick="setView('tickets')">← Back to tickets</a></div>
+        <div class="modal-b">
+          <div class="tdetail">
+            <div>
+              <p class="tdesc" id="td_desc"></p>
+
+              <div class="subhead-lite">Checklist</div>
+              <div class="checkbar"><span id="td_checkbar" style="width:33%"></span></div>
+              <div class="meta" style="color:var(--ink-soft);font-size:12px;margin-bottom:8px"><span id="td_checkcount">1 of 3 done</span></div>
+              <ul class="checklist" id="td_checklist">
+                <li class="done"><input type="checkbox" checked onchange="toggleItem(this)"><label>Reproduce under concurrent load</label></li>
+                <li><input type="checkbox" onchange="toggleItem(this)"><label>Add mutex around refresh call</label></li>
+                <li><input type="checkbox" onchange="toggleItem(this)"><label>Write regression test</label></li>
+              </ul>
+              <div class="add-item"><input id="td_newitem" placeholder="Add a checklist item…" onkeydown="if(event.key==='Enter')addItem()"><button class="btn" onclick="addItem()">Add</button></div>
+
+              <div class="subhead-lite" style="display:flex;justify-content:space-between;align-items:center">Time sessions <a style="font-weight:400;font-size:12px" onclick="openTimeForTicket()">+ Add manual time</a></div>
+              <div class="sessions" id="td_sessions">
+                <div class="srow head"><span>Started</span><span>Ended</span><span>Duration</span><span>Billable</span><span></span></div>
+                <div class="srow"><span>Jul 24, 09:12</span><span>Jul 24, 10:40</span><span class="dur">1:28</span><span><span class="pill green">Billable</span></span><span class="del" onclick="delSession(this)">Delete</span></div>
+                <div class="srow"><span>Jul 24, 14:05</span><span>Jul 24, 16:17</span><span class="dur">2:12</span><span><span class="pill green">Billable</span></span><span class="del" onclick="delSession(this)">Delete</span></div>
+              </div>
+
+              <div class="subhead-lite">Comments</div>
+              <div id="td_comments">
+                <div class="comment"><span class="avatar" style="background:#7ca63c">KM</span><div class="c-body"><b>Kasia</b> <span class="meta">Jul 24</span><p>Confirmed the race — added a log line and saw two refreshes 4ms apart.</p></div></div>
+                <div class="comment"><span class="avatar">LM</span><div class="c-body"><b>You</b> <span class="meta">Jul 24</span><p>Nice. Mutex approach makes sense; let's make sure it's per-tenant not global.</p></div></div>
+              </div>
+              <div class="cmt-compose">
+                <div class="add-item">
+                  <input id="td_newcomment" placeholder="Write a comment…" onkeydown="if(event.key==='Enter')addComment()">
+                  <button class="btn icon-btn" title="Attach files" onclick="document.getElementById('td_files').click()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg></button>
+                  <button class="btn primary" onclick="addComment()">Post</button>
+                  <input type="file" id="td_files" multiple style="display:none" onchange="stageFiles(this.files)">
+                </div>
+                <div class="cmt-staged" id="td_staged"></div>
+              </div>
+            </div>
+
+            <aside>
+              <div class="rblock td-details" style="margin-bottom:18px"><h4 style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-soft);font-weight:700;margin-bottom:8px">Details</h4>
+                <div class="kv"><span class="k">Status</span><span class="v"><span id="td_status_wrap"><span class="pill open badge-sz" id="td_status" onclick="editStatus()">In Progress</span></span></span></div>
+                <div class="kv"><span class="k">Time logged</span><span class="v"><b id="td_time">3:40</b></span></div>
+                <div class="kv"><span class="k">Due</span><span class="v" id="td_due_wrap"></span></div>
+                <div class="kv col"><span class="k">Assignee</span><span class="assignees" id="td_assignee_wrap"></span></div>
+              </div>
+              <button class="btn primary" style="width:100%;justify-content:center" onclick="trackFromDetail()">Start timer on this ticket</button>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="files">
+      <div class="card">
+        <div class="card-h"><h3>Files</h3><div class="rt"><a onclick="openModal('folder')">+ New folder</a><a onclick="openModal('file')">+ Upload</a></div></div>
+        <table>
+          <thead><tr><th>Name</th><th>Type</th><th>Added by</th><th>Size</th><th>Updated</th></tr></thead>
+          <tbody id="fileBody">
+            <tr class="folderrow" onclick="toast('Open Documents')"><td><span class="fic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></span><a>Documents</a></td><td>Folder</td><td>—</td><td>8 files</td><td>2h ago</td></tr>
+            <tr class="folderrow" onclick="toast('Open Contracts')"><td><span class="fic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></span><a>Contracts</a></td><td>Folder</td><td>—</td><td>3 files</td><td>Jul 20</td></tr>
+            <tr class="folderrow" onclick="toast('Open Design')"><td><span class="fic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></span><a>Design</a></td><td>Folder</td><td>—</td><td>12 files</td><td>Jul 19</td></tr>
+            <tr class="filerow"><td><span class="fic" style="background:var(--notebook)">D</span><a>Migration plan</a></td><td>Document</td><td>David</td><td>—</td><td>2h ago</td></tr>
+            <tr class="filerow"><td><span class="fic" style="background:var(--file)">P</span><a>api-spec-v3.pdf</a></td><td>PDF</td><td>David</td><td>1.2 MB</td><td>1h ago</td></tr>
+            <tr class="filerow"><td><span class="fic" style="background:#5a7a2e">X</span><a>rates-2026.xlsx</a></td><td>Spreadsheet</td><td>Kasia</td><td>88 KB</td><td>yesterday</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="view" id="notebook">
+      <div class="card">
+        <div class="card-h"><h3>Notebook</h3><a onclick="openModal('file')">+ New page</a></div>
+        <table>
+          <thead><tr><th>Page</th><th>Author</th><th>Updated</th></tr></thead>
+          <tbody>
+            <tr class="clickable" onclick="openNote('Moonrope Documentation')"><td><a>Moonrope Documentation</a></td><td>Adam C</td><td>today</td></tr>
+            <tr class="clickable" onclick="openNote('Client onboarding checklist')"><td><a>Client onboarding checklist</a></td><td>Kasia</td><td>4 days ago</td></tr>
+            <tr class="clickable" onclick="openNote('Deployment runbook')"><td><a>Deployment runbook</a></td><td>Charlie S</td><td>Jul 18</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="view" id="noteDetail">
+      <div class="card">
+        <div class="card-h">
+          <h3 id="nd_crumb">Notebook</h3>
+          <div class="note-tools">
+            <a id="nd_editBtn" onclick="editNote()">Edit</a>
+            <a id="nd_saveBtn" onclick="saveNote()" style="display:none">Save</a>
+            <a id="nd_cancelBtn" onclick="cancelNote()" style="display:none">Cancel</a>
+            <a onclick="setView('notebook')">← Back</a>
+          </div>
+        </div>
+        <div class="lexy">
+          <div class="doc-title" id="nd_title">Moonrope Documentation</div>
+          <div class="doc-meta" id="nd_meta">Adam C · updated today</div>
+          <div id="nd_body">
+            <p>Moonrope is the internal API gateway that sits between client integrations and the core sync engine. This page documents the auth handshake and rate-limit behaviour.</p>
+            <h2>Authentication</h2>
+            <p>Clients exchange a long-lived key for a short-lived token via <code>POST /oauth/token</code>. Tokens expire after 15 minutes and refresh through the same endpoint.</p>
+            <ul><li>Keys are per-tenant, scoped to a single project</li><li>Refresh is idempotent — or should be (see ticket #3)</li></ul>
+            <h2>Rate limits</h2>
+            <p>Default is 600 requests/minute per tenant, burstable to 1000. Exceeding returns <code>429</code> with a <code>Retry-After</code> header.</p>
+          </div>
+          <div id="nd_editor" style="display:none"></div>
+          <div class="lexy-note">In Rails this is Action Text — <code>form.rich_text_area :body</code> renders exactly this <code>&lt;lexxy-editor&gt;</code>. Click Edit to load the real Lexxy editor.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="pcalendar">
+      <div class="card">
+        <div class="card-h">
+          <div class="rt"><button class="calnav" onclick="pcalShift(-1)">‹</button><h3 id="pcalLabel">July 2026</h3><button class="calnav" onclick="pcalShift(1)">›</button></div>
+          <div class="rt callegend">
+            <span class="lg"><span class="lg-dot" style="background:var(--blue)"></span>Due</span>
+            <span class="lg"><span class="lg-dot" style="background:var(--notebook)"></span>Event</span>
+            <span class="lg"><span class="lg-dot" style="background:var(--time)"></span>Time</span>
+            <a onclick="openModal('event')">+ New event</a>
+          </div>
+        </div>
+        <div class="cal" id="pcalGrid"></div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal" data-modal="ticket" style="display:none">
+    <div class="modal-h"><h3>New ticket</h3><button class="x" onclick="closeModal()">&times;</button></div>
+    <div class="modal-b">
+      <div class="field"><label>Summary</label><input id="tk_sum" placeholder="Short description of the issue"></div>
+      <div class="field row2"><label>Status &amp; assignee</label>
+        <select id="tk_status"><option>Open</option><option>Accepted</option><option>In Progress</option><option>Resolved</option></select>
+        <select id="tk_who"><option>—</option><option>Adam C</option><option>Charlie S</option><option>Dan Q</option><option>You</option></select>
+      </div>
+      <div class="field"><label>Details</label><textarea rows="3" placeholder="What needs to happen?"></textarea></div>
+    </div>
+    <div class="modal-f"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="submitTicket()">Create ticket</button></div>
+  </div>
+
+  <div class="modal" data-modal="file" style="display:none">
+    <div class="modal-h"><h3>Add file or document</h3><button class="x" onclick="closeModal()">&times;</button></div>
+    <div class="modal-b">
+      <div class="field"><label>Type</label><select id="fl_type"><option value="up">Upload a file</option><option value="doc">New document</option></select></div>
+      <div class="field"><label>Name</label><input id="fl_name" placeholder="e.g. requirements.pdf"></div>
+      <div class="field"><label>Folder</label><select><option>Documents</option><option>Contracts</option><option>Design</option></select></div>
+    </div>
+    <div class="modal-f"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="submitFile()">Save</button></div>
+  </div>
+
+  <div class="modal" data-modal="folder" style="display:none">
+    <div class="modal-h"><h3>New folder</h3><button class="x" onclick="closeModal()">&times;</button></div>
+    <div class="modal-b"><div class="field"><label>Folder name</label><input id="fd_name" placeholder="e.g. Invoices"></div></div>
+    <div class="modal-f"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="submitFolder()">Create folder</button></div>
+  </div>
+
+  <div class="modal" data-modal="time" style="display:none">
+    <div class="modal-h"><h3>Add time manually</h3><button class="x" onclick="closeModal()">&times;</button></div>
+    <div class="modal-b">
+      <div class="field" id="tm_projwrap"><label>Project</label><select id="tm_proj" onchange="fillTicketOptions()"></select></div>
+      <div class="field"><label>Ticket</label><select id="tm_task"></select></div>
+      <div class="field row2"><label>Date &amp; duration</label><input id="tm_date" type="date"><input id="tm_dur" placeholder="e.g. 1:30"></div>
+      <div class="field"><label>Description</label><input id="tm_desc" placeholder="What did you work on?"></div>
+      <div class="field"><label><input type="checkbox" id="tm_bill" checked style="width:auto;margin-right:6px">Billable</label></div>
+    </div>
+    <div class="modal-f"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="submitTime()">Log time</button></div>
+  </div>
+
+  <div class="modal" data-modal="timer" style="display:none">
+    <div class="modal-h"><h3>Start timer</h3><button class="x" onclick="closeModal()">&times;</button></div>
+    <div class="modal-b">
+      <div class="field" id="tmr_projwrap"><label>Project</label><select id="tmr_proj" onchange="fillTimerTickets()"></select></div>
+      <div class="field"><label>Ticket</label><select id="tmr_task"></select></div>
+    </div>
+    <div class="modal-f"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="confirmTimer()">Start timer</button></div>
+  </div>
+
+  <div class="modal" data-modal="proj" style="display:none">
+    <div class="modal-h"><h3>New project</h3><button class="x" onclick="closeModal()">&times;</button></div>
+    <div class="modal-b"><div class="field"><label>Project name</label><input id="pj_name" placeholder="e.g. Billing portal"></div><div class="field"><label>Client</label><input id="pj_client" placeholder="e.g. ChargeBee Ltd"></div></div>
+    <div class="modal-f"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="submitProject()">Create project</button></div>
+  </div>
+
+  <div class="modal" data-modal="client" style="display:none">
+    <div class="modal-h"><h3>New client</h3><button class="x" onclick="closeModal()">&times;</button></div>
+    <div class="modal-b"><div class="field"><label>Client name</label><input id="cl_name" placeholder="e.g. Northwind MSP"></div></div>
+    <div class="modal-f"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="submitClient()">Create client</button></div>
+  </div>
+
+  <div class="modal" data-modal="event" style="display:none">
+    <div class="modal-h"><h3>New event</h3><button class="x" onclick="closeModal()">&times;</button></div>
+    <div class="modal-b">
+      <div class="field"><label>Title</label><input id="ev_title" placeholder="e.g. Client kickoff call"></div>
+      <div class="field row2"><label>Date &amp; time</label><input id="ev_date" type="date"><input id="ev_time" type="time"></div>
+      <div class="field"><label>Project</label><select id="ev_proj"></select></div>
+    </div>
+    <div class="modal-f"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="submitEvent()">Add event</button></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ---- data ---- */
+  var PROJECTS = ['ConnectWise sync','Ticket sync add-on','BrainSpark redesign','Autotask migration','MergeDeck v2'];
+  var TICKETS = {
+    '#3': {t:'OAuth token refresh fails intermittently', st:'In Progress', stcls:'open', who:'Adam C', time:'3:40', name:'OAuth token refresh', due:'2026-07-27', desc:'Token refresh intermittently returns 401 under load. Suspect a race in the refresh mutex — two requests refresh simultaneously and one invalidates the other\u2019s token.'},
+    '#2': {t:'Add rate-limiting to public API', st:'Accepted', stcls:'open', who:'Dan Q', time:'1:15', name:'Rate-limiting API', due:'2026-07-31', desc:'Public API has no per-tenant rate limit. Add a sliding-window limiter with a configurable ceiling and a 429 + Retry-After response.'},
+    '#6': {t:'Webhook retries pile up on 503', st:'Open', stcls:'open', who:'—', time:'0:00', name:'Webhook retries', due:'2026-07-22', desc:'When the downstream returns 503, retries queue without backoff and pile up. Add exponential backoff with a dead-letter after N attempts.'},
+    '#4': {t:'Allow users to signup for the application', st:'Resolved', stcls:'res', who:'Charlie S', time:'6:20', name:'Allow users to signup', due:'', desc:'Add a public signup flow with email verification. Resolved — shipped with penguin illustrations.'},
+    '#1': {t:'Set up CI on Travis', st:'Resolved', stcls:'res', who:'Adam C', time:'2:00', name:'CI on Travis', due:'', desc:'Configure Travis to run the test suite on every push to master.'}
+  };
+  var EVENTS = [
+    {title:'Northwind kickoff call', date:'2026-07-27', time:'14:00', project:'ConnectWise sync'},
+    {title:'Sprint review', date:'2026-07-30', time:'11:00', project:'MergeDeck v2'},
+    {title:'Acme design walkthrough', date:'2026-07-24', time:'', project:'BrainSpark redesign'}
+  ];
+  /* tracked-time totals per day (hours) — demo */
+  var TIME_BY_DAY = {'2026-07-22':2.5,'2026-07-23':1.0,'2026-07-24':5.9,'2026-07-25':2.25};
+  var PROJ_COLOR = {'ConnectWise sync':'#1c6cb3','Ticket sync add-on':'#4a90c4','BrainSpark redesign':'#7ca63c','Autotask migration':'#cc3b30','MergeDeck v2':'#e8871e'};
+
+  var onHome = true, curProject = 'ConnectWise sync';
+
+  function goHome(){
+    onHome = true;
+    document.getElementById('workspace').classList.add('on');
+    document.getElementById('project').classList.remove('on');
+    document.getElementById('projbar').classList.remove('on');
+    document.getElementById('homehead').classList.remove('hidden');
+    homeView('projects');
+    window.scrollTo(0,0);
+  }
+  function openProject(name, client){
+    onHome = false; curProject = name;
+    document.getElementById('workspace').classList.remove('on');
+    document.getElementById('project').classList.add('on');
+    document.getElementById('projbar').classList.add('on');
+    document.getElementById('homehead').classList.add('hidden');
+    document.getElementById('projName').textContent = name;
+    document.getElementById('railClient').textContent = client;
+    setView('overview'); recalcProjTotal(); window.scrollTo(0,0);
+  }
+  function setView(view){
+    document.querySelectorAll('.tabs button').forEach(function(x){x.classList.toggle('active', x.dataset.view===view || (view==='ticketDetail'&&x.dataset.view==='tickets') || (view==='noteDetail'&&x.dataset.view==='notebook'));});
+    document.querySelectorAll('#project .view').forEach(function(x){x.classList.toggle('active', x.id===view);});
+    var hs=document.getElementById('headstack'); if(hs) hs.style.display = (view==='ticketDetail') ? 'none' : '';
+    if(view==='tickets') recalcProjTotal();
+    if(view==='pcalendar') renderPcal();
+    window.scrollTo(0,0);
+  }
+  document.querySelectorAll('.tabs button').forEach(function(b){ b.onclick=function(){setView(b.dataset.view);}; });
+
+  /* ---- ticket detail ---- */
+  var curTicket = '#3';
+  function openTicket(num){
+    var d = TICKETS[num]; if(!d) return;
+    curTicket = num;
+    document.getElementById('td_title').textContent = num + ' — ' + d.name;
+    document.getElementById('td_desc').textContent = d.desc;
+    renderStatus();
+    renderAssignees();
+    document.getElementById('td_time').textContent = d.time;
+    renderDue();
+    stagedFiles=[]; var stg=document.getElementById('td_staged'); if(stg) stg.innerHTML='';
+    document.querySelectorAll('#project .view').forEach(function(x){x.classList.toggle('active', x.id==='ticketDetail');});
+    document.querySelectorAll('.tabs button').forEach(function(x){x.classList.toggle('active', x.dataset.view==='tickets');});
+    var hs=document.getElementById('headstack'); if(hs) hs.style.display='none';
+    window.scrollTo(0,0);
+  }
+  function toggleItem(cb){ cb.closest('li').classList.toggle('done', cb.checked); updateChecklist(); }
+  function updateChecklist(){
+    var items=document.querySelectorAll('#td_checklist li'), done=document.querySelectorAll('#td_checklist li.done').length;
+    var pct=items.length?Math.round(done/items.length*100):0;
+    document.getElementById('td_checkbar').style.width=pct+'%';
+    document.getElementById('td_checkcount').textContent=done+' of '+items.length+' done';
+  }
+  function addItem(){
+    var i=document.getElementById('td_newitem'), v=i.value.trim(); if(!v) return;
+    document.getElementById('td_checklist').insertAdjacentHTML('beforeend','<li><input type="checkbox" onchange="toggleItem(this)"><label>'+esc(v)+'</label></li>');
+    i.value=''; updateChecklist();
+  }
+  var stagedFiles = [];
+  function fmtBytes(n){ if(n<1024) return n+' B'; if(n<1048576) return (n/1024).toFixed(0)+' KB'; return (n/1048576).toFixed(1)+' MB'; }
+  function fileIcon(){ return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M13 2v7h7"/></svg>'; }
+  function stageFiles(fileList){
+    Array.prototype.slice.call(fileList).forEach(function(f){ stagedFiles.push({name:f.name, size:f.size}); });
+    document.getElementById('td_files').value='';
+    renderStaged();
+  }
+  function renderStaged(){
+    var box=document.getElementById('td_staged');
+    box.innerHTML = stagedFiles.map(function(f,i){
+      return '<span class="file-chip">'+fileIcon()+'<span class="fn">'+esc(f.name)+'</span><span class="fsz">'+fmtBytes(f.size)+'</span><button class="chip-x" title="Remove" onclick="unstageFile('+i+')">&times;</button></span>';
+    }).join('');
+  }
+  function unstageFile(i){ stagedFiles.splice(i,1); renderStaged(); }
+  function addComment(){
+    var i=document.getElementById('td_newcomment'), v=i.value.trim();
+    if(!v && !stagedFiles.length) return;
+    var body = v ? '<p>'+esc(v)+'</p>' : '';
+    var atts = stagedFiles.length ? '<div class="cmt-atts">'+stagedFiles.map(function(f){
+      return '<a class="file-chip" title="'+esc(f.name)+'">'+fileIcon()+'<span class="fn">'+esc(f.name)+'</span><span class="fsz">'+fmtBytes(f.size)+'</span></a>';
+    }).join('')+'</div>' : '';
+    document.getElementById('td_comments').insertAdjacentHTML('beforeend','<div class="comment"><span class="avatar">LM</span><div class="c-body"><b>You</b> <span class="meta">just now</span>'+body+atts+'</div></div>');
+    i.value=''; stagedFiles=[]; renderStaged();
+    toast(atts ? 'Comment posted with attachment' : 'Comment posted');
+  }
+  var STATUSES=['Open','Accepted','In Progress','Resolved'];
+  var PEOPLE=['Adam C','Charlie S','Dan Q','Kasia','You'];
+
+  /* status: swap badge for a rounded select in place */
+  function renderStatus(){
+    var d=TICKETS[curTicket];
+    document.getElementById('td_status_wrap').innerHTML='<span class="pill '+d.stcls+' badge-sz" id="td_status" onclick="editStatus()">'+d.st+'</span>';
+  }
+  function editStatus(){
+    var cur=TICKETS[curTicket].st, wrap=document.getElementById('td_status_wrap');
+    var opts=STATUSES.map(function(s){return '<option'+(s===cur?' selected':'')+'>'+s+'</option>';}).join('');
+    wrap.innerHTML='<select class="rounded-select" id="st_select">'+opts+'</select>';
+    var sel=document.getElementById('st_select'); sel.focus(); if(sel.showPicker){ try{sel.showPicker();}catch(e){} }
+    sel.onchange=function(){ pickStatus(sel.value); };
+    sel.onblur=function(){ renderStatus(); };
+  }
+  function pickStatus(v){
+    var cls=(v==='Resolved')?'res':'open';
+    TICKETS[curTicket].st=v; TICKETS[curTicket].stcls=cls;
+    renderStatus(); toast('Status → '+v);
+  }
+
+  function currentAssignees(){
+    var w=TICKETS[curTicket].who;
+    if(!w || w==='—') return [];
+    return w.split(',').map(function(s){return s.trim();}).filter(Boolean);
+  }
+  function renderAssignees(){
+    var list=currentAssignees(), wrap=document.getElementById('td_assignee_wrap');
+    var html=list.map(function(p){
+      return '<span class="chip-a"><span class="nm">'+esc(p)+'</span><button class="chip-x" title="Remove" onclick="removeAssignee(\''+esc(p)+'\')">&times;</button></span>';
+    }).join('');
+    html += '<span id="td_add_wrap"><button class="chip-add" title="Add assignee" onclick="editAssignee()">+ Assign</button></span>';
+    wrap.innerHTML = html;
+  }
+  function editAssignee(){
+    var taken=currentAssignees(), avail=PEOPLE.filter(function(p){return taken.indexOf(p)===-1;});
+    if(!avail.length){ toast('Everyone is already assigned'); return; }
+    var host=document.getElementById('td_add_wrap');
+    var opts='<option value="" disabled selected>Assign</option>'+avail.map(function(p){return '<option>'+esc(p)+'</option>';}).join('');
+    host.innerHTML='<select class="rounded-select" id="as_select">'+opts+'</select>';
+    var sel=document.getElementById('as_select'); sel.focus(); if(sel.showPicker){ try{sel.showPicker();}catch(e){} }
+    sel.onchange=function(){ if(sel.value) addAssignee(sel.value); };
+    sel.onblur=function(){ renderAssignees(); };
+  }
+  function addAssignee(p){
+    var list=currentAssignees(); if(list.indexOf(p)===-1) list.push(p);
+    TICKETS[curTicket].who=list.join(', '); renderAssignees(); toast('Added '+p);
+  }
+  function removeAssignee(p){
+    var list=currentAssignees().filter(function(x){return x!==p;});
+    TICKETS[curTicket].who=list.length?list.join(', '):'—'; renderAssignees(); toast('Removed '+p);
+  }
+
+  /* ---- due date (with year + clear) ---- */
+  var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var TODAY='2026-07-25';
+  function fmtDue(iso){ if(!iso) return '—'; var p=iso.split('-'); return MONTHS[(+p[1])-1]+' '+(+p[2])+', '+p[0]; }
+  function dueState(iso){ if(!iso) return ''; if(iso<TODAY) return 'overdue'; var d=new Date(iso), t=new Date(TODAY); var days=(d-t)/86400000; return days<=3?'soon':''; }
+  function renderDue(){
+    var iso=TICKETS[curTicket].due||'', wrap=document.getElementById('td_due_wrap');
+    if(!iso){ wrap.innerHTML='<button class="chip-add" onclick="editDue()">+ Set due date</button>'; return; }
+    var st=dueState(iso), lbl=fmtDue(iso)+(st==='overdue'?' · overdue':'');
+    wrap.innerHTML='<span class="due-chip '+st+'"><span class="due-set" onclick="editDue()">'+lbl+'</span><button class="due-clear" title="Clear due date" onclick="clearDue()">&times;</button></span>';
+  }
+  function editDue(){
+    var wrap=document.getElementById('td_due_wrap');
+    wrap.innerHTML='<input type="date" class="due-input" id="due_inline" value="'+(TICKETS[curTicket].due||'')+'">';
+    var i=document.getElementById('due_inline'); i.focus(); if(i.showPicker){ try{i.showPicker();}catch(e){} }
+    i.onchange=function(){ TICKETS[curTicket].due=i.value; renderDue(); if(i.value) toast('Due '+fmtDue(i.value)); };
+    i.onblur=function(){ renderDue(); };
+  }
+  function clearDue(){ TICKETS[curTicket].due=''; renderDue(); toast('Due date cleared'); }
+
+  /* ---- calendar ---- */
+  var calYear=2026, calMonth=6; /* 0-indexed: 6=July */
+  function homeView(which){
+    document.getElementById('ws_projects').style.display = which==='projects'?'':'none';
+    document.getElementById('ws_calendar').style.display = which==='calendar'?'':'none';
+    document.getElementById('homeTitle').textContent = which==='calendar'?'Calendar':'All projects';
+    document.querySelectorAll('#homeSeg button').forEach(function(b,i){ b.classList.toggle('on', (which==='projects')===(i===0)); });
+    if(which==='calendar') renderCalendar();
+  }
+  function calShift(d){ calMonth+=d; if(calMonth<0){calMonth=11;calYear--;} if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+  function iso(y,m,d){ return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0'); }
+  function buildCalendar(gridId, labelId, year, month, projectFilter){
+    document.getElementById(labelId).textContent = ['January','February','March','April','May','June','July','August','September','October','November','December'][month]+' '+year;
+    var grid=document.getElementById(gridId);
+    var html=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(function(d){return '<div class="cah">'+d+'</div>';}).join('');
+    var startDow=(new Date(year,month,1).getDay()+6)%7;
+    var daysInMonth=new Date(year,month+1,0).getDate();
+    var prevDays=new Date(year,month,0).getDate();
+    var dueByDay={};
+    Object.keys(TICKETS).forEach(function(k){ var t=TICKETS[k]; if(t.due){ (dueByDay[t.due]=dueByDay[t.due]||[]).push({num:k,name:t.name}); } });
+    var cells=[];
+    for(var i=0;i<startDow;i++){ cells.push({d:prevDays-startDow+1+i, out:true}); }
+    for(var d=1;d<=daysInMonth;d++){ cells.push({d:d, out:false}); }
+    while(cells.length%7!==0){ cells.push({d:cells.length-startDow-daysInMonth+1, out:true}); }
+    cells.forEach(function(c){
+      if(c.out){ html+='<div class="cell out"><div class="dnum">'+c.d+'</div></div>'; return; }
+      var key=iso(year,month,c.d);
+      var inner='<div class="dnum">'+c.d+'</div>';
+      (dueByDay[key]||[]).forEach(function(t){
+        inner+='<div class="ev due" title="'+t.num+' '+esc(t.name)+' due"><span class="bar" style="background:var(--blue)"></span>'+t.num+' '+esc(t.name)+'</div>';
+      });
+      EVENTS.filter(function(e){return e.date===key && (!projectFilter || e.project===projectFilter);}).forEach(function(e){
+        inner+='<div class="ev event" title="'+esc(e.title)+'"><span class="bar" style="background:var(--notebook)"></span>'+(e.time?e.time+' ':'')+esc(e.title)+'</div>';
+      });
+      if(TIME_BY_DAY[key]){ inner+='<span class="time-badge" title="Tracked">'+TIME_BY_DAY[key]+'h</span>'; }
+      html+='<div class="cell'+(key===TODAY?' today':'')+'">'+inner+'</div>';
+    });
+    grid.innerHTML=html;
+  }
+  function renderCalendar(){ buildCalendar('calGrid','calLabel',calYear,calMonth,null); }
+
+  /* project-level calendar */
+  var pcalYear=2026, pcalMonth=6;
+  function renderPcal(){ buildCalendar('pcalGrid','pcalLabel',pcalYear,pcalMonth,curProject); }
+  function pcalShift(d){ pcalMonth+=d; if(pcalMonth<0){pcalMonth=11;pcalYear--;} if(pcalMonth>11){pcalMonth=0;pcalYear++;} renderPcal(); }
+
+  function delSession(el){ el.closest('.srow').remove(); sumSessions(); toast('Session deleted'); }
+  function sumSessions(){
+    var sec=0;
+    document.querySelectorAll('#td_sessions .srow:not(.head) .dur').forEach(function(d){ sec+=toSec(d.textContent.trim()); });
+    document.getElementById('td_time').textContent=fmtHM(sec)+ (sec%60? '' : '');
+    document.getElementById('td_time').textContent=fmtColon(sec);
+  }
+  function openTimeForTicket(){ openModal('time'); /* preselect current ticket + project */ setTimeout(function(){ selectTimeTicket(curTicket); },0); }
+
+  /* ---- notebook ---- */
+  function openNote(title){
+    document.getElementById('nd_title').textContent=title;
+    document.getElementById('nd_crumb').textContent=title;
+    document.querySelectorAll('#project .view').forEach(function(x){x.classList.toggle('active', x.id==='noteDetail');});
+    document.querySelectorAll('.tabs button').forEach(function(x){x.classList.toggle('active', x.dataset.view==='notebook');});
+    setNoteMode('read'); window.scrollTo(0,0);
+  }
+  function setNoteMode(mode){
+    var r=mode==='read';
+    document.getElementById('nd_body').style.display=r?'':'none';
+    document.getElementById('nd_editor').style.display=r?'none':'';
+    document.getElementById('nd_editBtn').style.display=r?'':'none';
+    document.getElementById('nd_saveBtn').style.display=r?'none':'';
+    document.getElementById('nd_cancelBtn').style.display=r?'none':'';
+  }
+  function editNote(){
+    var body=document.getElementById('nd_body').innerHTML, host=document.getElementById('nd_editor');
+    host.innerHTML='<lexxy-editor class="lexxy-content" placeholder="Write something…"></lexxy-editor>';
+    var ed=host.querySelector('lexxy-editor'); try{ ed.innerHTML=body; }catch(e){}
+    setNoteMode('edit'); if(!window.Lexxy) toast('Loading Lexxy…');
+  }
+  function saveNote(){
+    var ed=document.querySelector('#nd_editor lexxy-editor'); var html=ed?(ed.value||ed.innerHTML):null;
+    if(html) document.getElementById('nd_body').innerHTML=html;
+    document.getElementById('nd_meta').textContent='You · updated just now';
+    setNoteMode('read'); toast('Page saved');
+  }
+  function cancelNote(){ setNoteMode('read'); }
+
+  /* ---- global timer ---- */
+  var running=false, secs=0, tick=null, activeNum=null, activeName=null;
+  function fmtColon(s){var h=Math.floor(s/3600),m=String(Math.floor(s%3600/60)).padStart(2,'0'),c=String(s%60).padStart(2,'0');return h+':'+m+':'+c;}
+  function renderPill(){
+    var pill=document.getElementById('pill'), ic=document.getElementById('pillIc'), btn=document.getElementById('pillBtn');
+    document.getElementById('pillClock').textContent=fmtColon(secs);
+    pill.classList.toggle('run', running);
+    ic.innerHTML=running?'<rect x="6" y="6" width="12" height="12" rx="1"/>':'<path d="M8 5v14l11-7z"/>';
+    btn.classList.toggle('stop', running); btn.title=running?'Stop timer':'Start timer';
+    document.getElementById('pillSel').textContent = activeNum ? (activeNum+' '+activeName) : 'Select a ticket…';
+  }
+  function startCount(){ tick=setInterval(function(){secs++;renderPill();},1000); }
+  function pillClick(){
+    if(running){ stopTimer(); }
+    else if(activeNum){ running=true; startCount(); renderPill(); }
+    else { openTimerModal(); }
+  }
+  function stopTimer(){ running=false; clearInterval(tick); if(secs>0) toast('Logged '+fmtColon(secs)+' to '+activeNum); secs=0; renderPill(); }
+  function trackTicket(num, name){
+    if(running){ clearInterval(tick); if(secs>0) toast('Logged '+fmtColon(secs)+' to '+activeNum); secs=0; }
+    activeNum=num; activeName=name; running=true; startCount(); renderPill(); toast('Tracking '+num+' '+name);
+  }
+  function trackFromDetail(){ trackTicket(curTicket, TICKETS[curTicket].name); }
+
+  /* timer modal: project-then-ticket on home, ticket-only on project */
+  function openTimerModal(){
+    var showProj = onHome;
+    document.getElementById('tmr_projwrap').style.display = showProj ? '' : 'none';
+    var ps=document.getElementById('tmr_proj'); ps.innerHTML = PROJECTS.map(function(p){return '<option>'+p+'</option>';}).join('');
+    if(!showProj){ ps.value = curProject; }
+    fillTimerTickets();
+    openModal('timer');
+  }
+  function fillTimerTickets(){
+    /* demo: same ticket set regardless of project */
+    var sel=document.getElementById('tmr_task');
+    sel.innerHTML = Object.keys(TICKETS).map(function(k){return '<option value="'+k+'">'+k+' '+TICKETS[k].name+'</option>';}).join('');
+  }
+  function confirmTimer(){
+    var num=document.getElementById('tmr_task').value;
+    if(!num){ toast('Pick a ticket'); return; }
+    if(onHome){ /* jump into that project context */ }
+    closeModal(); trackTicket(num, TICKETS[num].name);
+  }
+
+  /* ---- time totals ---- */
+  function toSec(t){ var p=t.split(':'); return (+p[0])*3600 + (+p[1])*60 + (p[2]?+p[2]:0); }
+  function fmtHM(sec){ var h=Math.floor(sec/3600), m=String(Math.floor(sec%3600/60)).padStart(2,'0'); return h+':'+m; }
+  function recalcProjTotal(){ var sec=0; document.querySelectorAll('#timeBody tr').forEach(function(r){var c=r.children[4]; if(c) sec+=toSec(c.textContent.trim());}); document.getElementById('projTimeTotal').textContent=fmtHM(sec); }
+  function recalcWeekTotal(){ var el=document.getElementById('weekTotal'); if(!el) return; var sec=0; document.querySelectorAll('#weekTimeBody tr').forEach(function(r){var c=r.children[3]; if(c) sec+=toSec(c.textContent.trim());}); el.textContent=fmtHM(sec); }
+
+  /* ---- search reveal ---- */
+  function openSearch(){
+    document.getElementById('searchBtn').style.display='none';
+    var f=document.getElementById('searchInput'); f.style.display=''; f.focus();
+  }
+  function closeSearch(){
+    var f=document.getElementById('searchInput'); f.style.display='none'; f.value='';
+    document.getElementById('searchBtn').style.display='';
+  }
+  function toggleSearch(){
+    if(document.getElementById('searchInput').style.display==='none') openSearch(); else closeSearch();
+  }
+  document.addEventListener('mousedown', function(e){
+    var f=document.getElementById('searchInput'), b=document.getElementById('searchBtn');
+    if(f.style.display!=='none' && !f.contains(e.target) && !b.contains(e.target)) closeSearch();
+  });
+
+  function openModal(name){
+    document.getElementById('modalBg').classList.add('open');
+    document.querySelectorAll('.modal').forEach(function(m){m.style.display = m.dataset.modal===name?'block':'none';});
+    var t=document.getElementById('tm_date'); if(t&&!t.value) t.value=new Date().toISOString().slice(0,10);
+    if(name==='time'){ setupTimeModal(); }
+    if(name==='event'){
+      var ps=document.getElementById('ev_proj'); ps.innerHTML=PROJECTS.map(function(p){return '<option>'+p+'</option>';}).join('');
+      if(!onHome) ps.value=curProject;
+      var ed=document.getElementById('ev_date'); if(ed&&!ed.value) ed.value=TODAY;
+    }
+  }
+  function closeModal(){ document.getElementById('modalBg').classList.remove('open'); }
+  document.getElementById('modalBg').addEventListener('click',function(e){ if(e.target.id==='modalBg') closeModal(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeModal(); });
+
+  function setupTimeModal(){
+    var showProj = onHome;
+    document.getElementById('tm_projwrap').style.display = showProj ? '' : 'none';
+    var ps=document.getElementById('tm_proj'); ps.innerHTML = PROJECTS.map(function(p){return '<option>'+p+'</option>';}).join('');
+    if(!showProj) ps.value=curProject;
+    fillTicketOptions();
+  }
+  function fillTicketOptions(){
+    var sel=document.getElementById('tm_task');
+    sel.innerHTML = '<option value="">Select a ticket…</option>' + Object.keys(TICKETS).map(function(k){return '<option value="'+k+'">'+k+' '+TICKETS[k].name+'</option>';}).join('');
+  }
+  function selectTimeTicket(num){ var s=document.getElementById('tm_task'); if(s) s.value=num; }
+
+  function submitTicket(){
+    var s=document.getElementById('tk_sum').value.trim(); if(!s){toast('Enter a summary');return;}
+    var st=document.getElementById('tk_status').value, who=document.getElementById('tk_who').value;
+    var n='#'+(Math.floor(Math.random()*90)+8), cls=st==='Resolved'?'res':'open';
+    TICKETS[n]={t:s,st:st,stcls:cls,who:who,time:'0:00',name:s,desc:'(no description yet)'};
+    document.getElementById('ticketBody').insertAdjacentHTML('afterbegin','<tr class="clickable" onclick="openTicket(\''+n+'\')"><td class="mono">'+n+'</td><td>'+esc(s)+'</td><td><span class="pill '+cls+'">'+st+'</span></td><td>'+who+'</td><td class="mono">0:00</td></tr>');
+    closeModal(); toast('Ticket '+n+' created'); document.getElementById('tk_sum').value='';
+  }
+  function submitFile(){
+    var n=document.getElementById('fl_name').value.trim(); if(!n){toast('Enter a name');return;}
+    var kind=document.getElementById('fl_type').value, letter=kind==='doc'?'D':'F', color=kind==='doc'?'var(--notebook)':'var(--repo)', type=kind==='doc'?'Document':'File';
+    document.getElementById('fileBody').insertAdjacentHTML('beforeend','<tr class="filerow"><td><span class="fic" style="background:'+color+'">'+letter+'</span><a>'+esc(n)+'</a></td><td>'+type+'</td><td>You</td><td>'+(kind==='doc'?'—':'0 KB')+'</td><td>just now</td></tr>');
+    closeModal(); toast(type+' added'); document.getElementById('fl_name').value='';
+  }
+  function submitFolder(){
+    var n=document.getElementById('fd_name').value.trim(); if(!n){toast('Enter a folder name');return;}
+    var icon='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>';
+    document.getElementById('fileBody').insertAdjacentHTML('afterbegin','<tr class="folderrow" onclick="toast(\'Open '+esc(n)+'\')"><td><span class="fic">'+icon+'</span><a>'+esc(n)+'</a></td><td>Folder</td><td>—</td><td>0 files</td><td>just now</td></tr>');
+    closeModal(); toast('Folder created'); document.getElementById('fd_name').value='';
+  }
+  function submitTime(){
+    var task=document.getElementById('tm_task').value, dur=document.getElementById('tm_dur').value.trim(), desc=document.getElementById('tm_desc').value.trim();
+    if(!task){toast('Select a ticket');return;} if(!dur){toast('Enter a duration');return;}
+    var bill=document.getElementById('tm_bill').checked, pill=bill?'<span class="pill green">Billable</span>':'<span class="pill gray">Internal</span>';
+    var d=new Date().toLocaleDateString('en',{month:'short',day:'numeric'}), num=task.split(' ')[0];
+    var proj = onHome ? document.getElementById('tm_proj').value : curProject;
+    var tb=document.getElementById('timeBody'); if(tb){ tb.insertAdjacentHTML('afterbegin','<tr><td>You</td><td class="mono">'+num+'</td><td>'+esc(desc||task)+'</td><td class="mono">'+d+'</td><td class="mono">'+esc(dur)+'</td><td>'+pill+'</td></tr>'); recalcProjTotal(); }
+    var wk=document.getElementById('weekTimeBody'); if(wk){ wk.insertAdjacentHTML('afterbegin','<tr><td>'+esc(proj)+'</td><td>'+esc(desc||task)+'</td><td class="mono">'+d+'</td><td class="mono">'+esc(dur)+'</td><td>'+pill+'</td></tr>'); recalcWeekTotal(); }
+    /* if the open ticket matches, add a manual session too */
+    if(num===curTicket){ document.getElementById('td_sessions').insertAdjacentHTML('beforeend','<div class="srow"><span>'+d+' (manual)</span><span>—</span><span class="dur">'+esc(dur)+'</span><span>'+pill+'</span><span class="del" onclick="delSession(this)">Delete</span></div>'); sumSessions(); }
+    closeModal(); toast('Logged '+dur+' to '+num); document.getElementById('tm_dur').value=''; document.getElementById('tm_desc').value='';
+  }
+  function submitProject(){
+    var n=document.getElementById('pj_name').value.trim(); if(!n){toast('Enter a project name');return;}
+    var c=document.getElementById('pj_client').value.trim()||'Internal';
+    PROJECTS.push(n);
+    document.getElementById('projBody').insertAdjacentHTML('beforeend','<tr><td class="client-group" colspan="4"><span>'+esc(c)+'</span></td></tr><tr class="proj-row"><td><span class="dot" style="background:#3aa08a"></span><a onclick="openProject(\''+esc(n)+'\',\''+esc(c)+'\')">'+esc(n)+'</a></td><td>0</td><td><div class="prog"><span style="width:5%"></span></div></td><td class="mono">0h</td></tr>');
+    closeModal(); toast('Project created'); document.getElementById('pj_name').value=''; document.getElementById('pj_client').value='';
+  }
+  function submitClient(){ var n=document.getElementById('cl_name').value.trim(); if(!n){toast('Enter a client name');return;} closeModal(); toast('Client “'+n+'” created'); document.getElementById('cl_name').value=''; }
+  function submitEvent(){
+    var t=document.getElementById('ev_title').value.trim(); if(!t){toast('Enter a title');return;}
+    var date=document.getElementById('ev_date').value; if(!date){toast('Pick a date');return;}
+    var time=document.getElementById('ev_time').value, proj=document.getElementById('ev_proj').value;
+    EVENTS.push({title:t, date:date, time:time, project:proj});
+    closeModal(); toast('Event added'); document.getElementById('ev_title').value=''; document.getElementById('ev_time').value='';
+    var p=date.split('-');
+    if(!onHome){ pcalYear=+p[0]; pcalMonth=(+p[1])-1; renderPcal(); }
+    else { calYear=+p[0]; calMonth=(+p[1])-1; renderCalendar(); }
+  }
+
+  function esc(s){return s.replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},2400);}
+
+  goHome(); renderPill(); recalcProjTotal(); recalcWeekTotal(); sumSessions();
+</script>
+</body>
+</html>

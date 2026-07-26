@@ -1,0 +1,18 @@
+---
+layout: layout.html
+title: Button groups
+permalink: button-groups/index.html
+---
+<h1 class="docs-title">Button groups</h1>
+<p class="docs-lead">Button groups join related choices into one compact control.</p>
+<section class="docs-section" x-data="{ selected: 'list' }">
+  <h2 class="docs-section-title">Selected state</h2>
+  <p class="docs-copy">Use <span class="text-mono">aria-selected</span> for tab-like view switching or <span class="text-mono">aria-pressed</span> for toggle buttons.</p>
+  <div class="docs-demo">
+    <div class="docs-preview"><div class="btn-group" role="tablist" aria-label="View"><button class="btn-group-item" type="button" :aria-selected="selected === 'list'" @click="selected = 'list'">List</button><button class="btn-group-item" type="button" :aria-selected="selected === 'calendar'" @click="selected = 'calendar'">Calendar</button></div></div>
+    <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;div class="btn-group" role="tablist"&gt;
+  &lt;button class="btn-group-item" aria-selected="true"&gt;List&lt;/button&gt;
+  &lt;button class="btn-group-item" aria-selected="false"&gt;Calendar&lt;/button&gt;
+&lt;/div&gt;</code></div>
+  </div>
+</section>

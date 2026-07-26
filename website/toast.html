@@ -1,0 +1,16 @@
+---
+layout: layout.html
+title: Toast
+permalink: toast/index.html
+---
+<h1 class="docs-title">Toast</h1>
+<p class="docs-lead">Toasts provide brief, non-blocking feedback through the same open and closed state attributes as overlays.</p>
+<section class="docs-section" x-data="{ open: true }">
+  <h2 class="docs-section-title">Live region</h2>
+  <p class="docs-copy">Place status messages in a polite live region. Avoid putting critical actions only in a transient toast.</p>
+  <button class="btn btn-primary docs-trigger" type="button" @click="open = true">Show toast</button>
+  <div class="docs-demo"><div class="docs-toast-stage"><div class="toast" role="status" aria-live="polite" :data-state="open ? 'open' : 'closed'"><span aria-hidden="true">✓</span><span>Project saved successfully.</span><button class="modal-close toast-close" type="button" aria-label="Dismiss notification" @click="open = false">×</button></div></div><div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;div class="toast" role="status" aria-live="polite" data-state="open"&gt;
+  Project saved successfully.
+  &lt;button class="modal-close" aria-label="Dismiss notification"&gt;×&lt;/button&gt;
+&lt;/div&gt;</code></div></div>
+</section>

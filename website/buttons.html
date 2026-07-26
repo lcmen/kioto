@@ -1,0 +1,31 @@
+---
+layout: layout.html
+title: Buttons
+permalink: buttons/index.html
+---
+<h1 class="docs-title">Buttons</h1>
+<p class="docs-lead">Combine <span class="text-mono">btn</span> with one visual variant and an optional size or layout modifier.</p>
+<section class="docs-section">
+  <h2 class="docs-section-title">Variants</h2>
+  <p class="docs-copy">Primary actions should be scarce. Secondary and ghost buttons support the workflow; danger is reserved for destructive operations. Placeholder buttons use the prototype’s dashed empty-state treatment.</p>
+  <div class="docs-demo">
+    <div class="docs-preview docs-preview-row"><button class="btn btn-primary" type="button">Create project</button><button class="btn btn-secondary" type="button">Cancel</button><button class="btn btn-danger" type="button">Delete</button><button class="btn btn-ghost" type="button">Ghost</button><button class="btn btn-placeholder" type="button">+ Placeholder</button><button class="btn btn-primary" type="button" disabled>Saving</button></div>
+    <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;button class="btn btn-primary"&gt;Create project&lt;/button&gt;
+&lt;button class="btn btn-secondary"&gt;Cancel&lt;/button&gt;
+&lt;button class="btn btn-danger"&gt;Delete&lt;/button&gt;
+&lt;button class="btn btn-ghost"&gt;Ghost&lt;/button&gt;
+&lt;button class="btn btn-placeholder"&gt;+ Placeholder&lt;/button&gt;</code></div>
+  </div>
+</section>
+<section class="docs-section">
+  <h2 class="docs-section-title">Sizes and icon buttons</h2>
+  <p class="docs-copy">Icon-only buttons require an accessible name. <span class="text-mono">btn-full</span> fills its containing width.</p>
+  <div class="docs-demo">
+    <div class="docs-preview docs-preview-row"><button class="btn btn-primary btn-sm" type="button">Small</button><button class="btn btn-primary" type="button">Default</button><button class="btn btn-primary btn-lg" type="button">Large</button><button class="btn btn-secondary btn-icon" aria-label="Add item" type="button">+</button></div>
+    <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;button class="btn btn-primary btn-sm"&gt;Small&lt;/button&gt;
+&lt;button class="btn btn-primary btn-lg"&gt;Large&lt;/button&gt;
+&lt;button class="btn btn-secondary btn-icon" aria-label="Add item"&gt;+&lt;/button&gt;
+&lt;button class="btn btn-primary btn-full"&gt;Continue&lt;/button&gt;</code></div>
+  </div>
+  <p class="docs-note">Native disabled and <span class="text-mono">aria-disabled="true"</span> states are styled. Prevent activation yourself when using aria-disabled on links.</p>
+</section>

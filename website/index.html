@@ -1,0 +1,39 @@
+---
+layout: layout.html
+title: Compact application UI
+---
+<h1 class="docs-title">Kioto UI Toolkit</h1>
+<p class="docs-lead">A Foundry-inspired, CSS-only component toolkit for dense, practical web applications. Kioto gives Tailwind CSS v4 projects a semantic class layer that remains easy to override.</p>
+
+<section class="docs-section">
+  <h2 class="docs-section-title">Install from source</h2>
+  <p class="docs-copy">Import Kioto after Tailwind and the forms plugin. Consumers may redefine Kioto’s theme tokens in a later <span class="text-mono">@theme</span> block.</p>
+  <div class="docs-demo">
+    <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">@import "tailwindcss";
+@plugin "@tailwindcss/forms" { strategy: base }
+@import "./kioto.css";</code></div>
+  </div>
+</section>
+
+<section class="docs-section">
+  <h2 class="docs-section-title">Reference</h2>
+  <p class="docs-copy">Components are composable: combine a base class with a variant and optional size. Interaction state is represented with native attributes.</p>
+  <div class="docs-grid">
+    <a class="docs-grid-card" href="{{ '/foundations/' | url }}"><b>Foundations</b><span>Tokens, type, links, and surfaces</span></a>
+    <a class="docs-grid-card" href="{{ '/layout/' | url }}"><b>Layout</b><span>Page shells, headers, and sidebars</span></a>
+    <a class="docs-grid-card" href="{{ '/navigation/' | url }}"><b>Navigation</b><span>Application chrome, tabs, and segments</span></a>
+    <a class="docs-grid-card" href="{{ '/buttons/' | url }}"><b>Buttons</b><span>Variants, sizes, and disabled states</span></a>
+    <a class="docs-grid-card" href="{{ '/button-groups/' | url }}"><b>Button groups</b><span>Joined selected controls</span></a>
+    <a class="docs-grid-card" href="{{ '/cards/' | url }}"><b>Cards</b><span>Section framing and composition</span></a>
+    <a class="docs-grid-card" href="{{ '/tables/' | url }}"><b>Tables</b><span>Dense, responsive data tables</span></a>
+    <a class="docs-grid-card" href="{{ '/forms/' | url }}"><b>Forms</b><span>Inputs, validation, and layouts</span></a>
+    <a class="docs-grid-card" href="{{ '/badges/' | url }}"><b>Badges</b><span>Semantic status badges and dots</span></a>
+    <a class="docs-grid-card" href="{{ '/chips/' | url }}"><b>Chips</b><span>Selections and placeholders</span></a>
+    <a class="docs-grid-card" href="{{ '/avatars/' | url }}"><b>Avatars</b><span>Identity and avatar groups</span></a>
+    <a class="docs-grid-card" href="{{ '/progress/' | url }}"><b>Progress</b><span>Completion and consumption</span></a>
+    <a class="docs-grid-card" href="{{ '/list/' | url }}"><b>List</b><span>Compact key/value rows</span></a>
+    <a class="docs-grid-card" href="{{ '/feed/' | url }}"><b>Feed</b><span>Chronological activity items</span></a>
+    <a class="docs-grid-card" href="{{ '/modal/' | url }}"><b>Modal</b><span>Attribute-driven overlay state</span></a>
+    <a class="docs-grid-card" href="{{ '/toast/' | url }}"><b>Toast</b><span>Compact transient feedback</span></a>
+  </div>
+</section>

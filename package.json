@@ -1,0 +1,23 @@
+{
+  "name": "kioto",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "files": ["kioto.css"],
+  "scripts": {
+    "build": "npm run clean && npm run build:css && npm run build:11ty",
+    "build:css": "tailwindcss -i website/assets/index.css -o dist/assets/index.css --minify",
+    "build:11ty": "eleventy --input=website --output=dist",
+    "clean": "rm -rf dist",
+    "dev": "concurrently npm:watch:css npm:watch:11ty",
+    "watch:css": "tailwindcss -i website/assets/index.css -o dist/assets/index.css --watch",
+    "watch:11ty": "eleventy --input=website --output=dist --serve --watch"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.5",
+    "@tailwindcss/cli": "^4.1.11",
+    "@tailwindcss/forms": "^0.5.10",
+    "concurrently": "^9.2.0",
+    "tailwindcss": "^4.1.11"
+  }
+}

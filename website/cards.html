@@ -1,0 +1,30 @@
+---
+layout: layout.html
+title: Cards
+permalink: cards/index.html
+---
+<h1 class="docs-title">Cards</h1>
+<p class="docs-lead">Cards group related content with quiet borders and minimal elevation.</p>
+<section class="docs-section">
+  <h2 class="docs-section-title">Anatomy</h2>
+  <p class="docs-copy">Header, body, and footer regions are optional. Headers expose title and action slots through ordinary flex layout.</p>
+  <div class="docs-demo">
+    <div class="docs-preview"><article class="card"><header class="card-header"><h3 class="card-title">Project summary</h3><a class="link" href="#card-example">Edit</a></header><div class="card-body" id="card-example"><p class="text-body">Redesign the customer workspace and consolidate navigation.</p></div><footer class="card-footer"><button class="btn btn-secondary btn-sm" type="button">Close</button><button class="btn btn-primary btn-sm" type="button">Save</button></footer></article></div>
+    <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;article class="card"&gt;
+  &lt;header class="card-header"&gt;&lt;h3 class="card-title"&gt;Project summary&lt;/h3&gt;&lt;/header&gt;
+  &lt;div class="card-body"&gt;…&lt;/div&gt;
+  &lt;footer class="card-footer"&gt;…&lt;/footer&gt;
+&lt;/article&gt;</code></div>
+  </div>
+</section>
+<section class="docs-section">
+  <h2 class="docs-section-title">Table composition</h2>
+  <p class="docs-copy">Place a table wrapper directly inside a card to merge borders and radii into one seamless surface.</p>
+  <div class="docs-demo">
+    <div class="docs-preview"><div class="card"><div class="card-header"><h3 class="card-title">Recent projects</h3></div><div class="table-wrapper"><table class="table table-compact"><thead><tr><th>Project</th><th>Status</th></tr></thead><tbody><tr><td>Website redesign</td><td><span class="badge badge-success">Active</span></td></tr></tbody></table></div></div></div>
+    <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;div class="card"&gt;
+  &lt;div class="card-header"&gt;…&lt;/div&gt;
+  &lt;div class="table-wrapper"&gt;&lt;table class="table"&gt;…&lt;/table&gt;&lt;/div&gt;
+&lt;/div&gt;</code></div>
+  </div>
+</section>

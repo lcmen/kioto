@@ -1,0 +1,71 @@
+---
+layout: layout.html
+title: Simple app
+permalink: simple-app/index.html
+---
+<h1 class="docs-title">Simple app</h1>
+<p class="docs-lead">A representative project workspace assembled entirely from Kioto’s public component classes. The data is illustrative; domain widgets remain outside the library.</p>
+<div class="docs-simple-app">
+  <nav class="navbar" aria-label="Simple app">
+    <div class="navbar-inner">
+      <a class="navbar-brand" href="#simple-app-main"><span class="navbar-mark">F</span> Foundry</a>
+      <div class="navbar-actions">
+        <input class="navbar-search" type="search" placeholder="Search" aria-label="Search workspace">
+        <button class="btn btn-ghost btn-icon chrome-action" type="button" aria-label="Notifications">●</button>
+      </div>
+    </div>
+  </nav>
+  <div class="subnav">
+    <a class="subnav-back" href="#simple-app-main">← All projects</a>
+    <div class="subnav-title">Website redesign</div>
+    <nav class="subnav-tabs" aria-label="Project sections">
+      <a class="subnav-tab" href="#simple-app-main" aria-current="page">Overview</a>
+      <a class="subnav-tab" href="#simple-app-main">Tickets</a>
+      <a class="subnav-tab" href="#simple-app-main">Files</a>
+      <a class="subnav-tab" href="#simple-app-main">Notes</a>
+      <a class="subnav-tab" href="#simple-app-main">Activity</a>
+    </nav>
+  </div>
+  <div class="container pb-4" id="simple-app-main">
+    <header class="page-header">
+      <h2 class="page-header-title">Project overview</h2>
+      <div class="page-header-actions"><div class="btn-group" aria-label="View"><button class="btn-group-item" aria-selected="true" type="button">List</button><button class="btn-group-item" aria-selected="false" type="button">Calendar</button></div><button class="btn btn-primary" type="button">New ticket</button></div>
+    </header>
+    <div class="layout-main">
+      <main class="docs-stack">
+        <section class="card">
+          <header class="card-header"><h3 class="card-title">Open tickets</h3><a class="link" href="#simple-app-main">View all</a></header>
+          <div class="table-wrapper">
+            <table class="table table-hover">
+              <thead><tr><th>Ticket</th><th>Assignee</th><th>Due</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr class="table-row-clickable"><td><a class="link" href="#simple-app-main">Finalize responsive navigation</a><p class="text-meta text-mono">WEB-142</p></td><td><span class="chip">Alex Morgan <button class="chip-remove" type="button" aria-label="Remove Alex Morgan">×</button></span></td><td class="text-mono">Jul 29</td><td><span class="badge badge-warning">In progress</span></td></tr>
+                <tr class="table-row-clickable"><td><a class="link" href="#simple-app-main">Audit form validation</a><p class="text-meta text-mono">WEB-139</p></td><td><span class="chip">Jamie Chen <button class="chip-remove" type="button" aria-label="Remove Jamie Chen">×</button></span></td><td class="text-mono">Aug 02</td><td><span class="badge badge-primary">Planned</span></td></tr>
+                <tr class="table-row-clickable"><td><a class="link" href="#simple-app-main">Ship project dashboard</a><p class="text-meta text-mono">WEB-133</p></td><td><span class="chip">Sam Rivera <button class="chip-remove" type="button" aria-label="Remove Sam Rivera">×</button></span></td><td class="text-mono">Jul 25</td><td><span class="badge badge-danger">Blocked</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section class="card">
+          <header class="card-header"><h3 class="card-title">Recent activity</h3></header>
+          <div class="feed">
+            <article class="feed-item"><span class="feed-icon" aria-hidden="true">✓</span><div class="feed-body">Alex completed “Map information architecture”<p class="feed-meta">18 minutes ago</p></div></article>
+            <article class="feed-item"><span class="feed-icon" aria-hidden="true">↗</span><div class="feed-body">Jamie uploaded <a class="link" href="#simple-app-main">navigation-flow.pdf</a><p class="feed-meta">Yesterday at 16:42</p></div></article>
+          </div>
+        </section>
+      </main>
+      <aside class="layout-sidebar docs-stack">
+        <section class="card">
+          <header class="card-header"><h3 class="card-title">Details</h3></header>
+          <div class="card-body">
+            <dl class="kv-list"><div class="kv-row"><dt class="kv-key">Client</dt><dd class="kv-value">Acme Ltd.</dd></div><div class="kv-row"><dt class="kv-key">Status</dt><dd class="kv-value"><span class="badge badge-success">Active</span></dd></div><div class="kv-row"><dt class="kv-key">Due</dt><dd class="kv-value text-mono">Aug 16</dd></div></dl>
+          </div>
+        </section>
+        <section class="card">
+          <header class="card-header"><h3 class="card-title">Budget</h3></header>
+          <div class="card-body docs-stack"><div class="section-header"><span class="section-title">$11,420 used</span><span class="section-actions"><span class="text-meta">of $18,500</span></span></div><div class="progress" role="progressbar" aria-label="Budget used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="62"><div class="progress-bar progress-info progress-60"></div></div></div>
+        </section>
+      </aside>
+    </div>
+  </div>
+</div>

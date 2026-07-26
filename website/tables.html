@@ -1,0 +1,23 @@
+---
+layout: layout.html
+title: Tables
+permalink: tables/index.html
+---
+<h1 class="docs-title">Tables</h1>
+<p class="docs-lead">Compact data tables use structural descendant styles, keeping markup terse and cell-level utility overrides possible.</p>
+<section class="docs-section">
+  <h2 class="docs-section-title">Variants</h2>
+  <p class="docs-copy">The wrapper handles horizontal overflow. Hover and stripe treatments are opt-in and rows may communicate clickability.</p>
+  <div class="docs-demo">
+    <div class="docs-preview">
+      <div class="table-wrapper"><table class="table table-hover table-striped"><thead><tr><th>Project</th><th>Owner</th><th>Progress</th><th>Status</th></tr></thead><tbody><tr class="table-group-row"><td colspan="4">Acme Ltd.</td></tr><tr class="table-row-clickable"><td><a class="link" href="#tables-example">Website redesign</a></td><td>Alex Morgan</td><td><div class="progress"><div class="progress-bar progress-success progress-72"></div></div></td><td><span class="badge badge-success">Active</span></td></tr><tr><td>Brand system</td><td>Jamie Chen</td><td><div class="progress"><div class="progress-bar progress-45"></div></div></td><td><span class="badge badge-warning">At risk</span></td></tr><tr class="table-total-row"><td colspan="2">Total active</td><td colspan="2">2 projects</td></tr></tbody></table></div>
+    </div>
+    <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;div class="table-wrapper"&gt;
+  &lt;table class="table table-hover table-striped"&gt;
+    &lt;thead&gt;&lt;tr&gt;&lt;th&gt;Project&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+    &lt;tbody&gt;&lt;tr class="table-row-clickable"&gt;…&lt;/tr&gt;&lt;/tbody&gt;
+  &lt;/table&gt;
+&lt;/div&gt;</code></div>
+  </div>
+  <p class="docs-note" id="tables-example">Clickable rows still need a real link or button for keyboard access. Do not rely on a pointer cursor alone.</p>
+</section>

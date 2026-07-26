@@ -1,0 +1,33 @@
+---
+layout: layout.html
+title: Layout
+permalink: layout/index.html
+---
+<h1 class="docs-title">Layout</h1>
+<p class="docs-lead">Responsive primitives frame dense application pages without prescribing domain-specific structure.</p>
+<section class="docs-section">
+  <h2 class="docs-section-title">Page header</h2>
+  <p class="docs-copy">Actions stack below the title on narrow screens and align beside it when space is available.</p>
+  <div class="docs-demo">
+    <div class="docs-preview">
+      <header class="page-header"><h2 class="page-header-title">Active projects</h2><div class="page-header-actions"><button class="btn btn-secondary" type="button">Export</button><button class="btn btn-primary" type="button">New project</button></div></header>
+    </div>
+    <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;header class="page-header"&gt;
+  &lt;h1 class="page-header-title"&gt;Active projects&lt;/h1&gt;
+  &lt;div class="page-header-actions"&gt;…&lt;/div&gt;
+&lt;/header&gt;</code></div>
+  </div>
+</section>
+<section class="docs-section" id="layout-example">
+  <h2 class="docs-section-title">Main and sidebar</h2>
+  <p class="docs-copy">This mirrors the prototype’s unbordered two-column layout used on the workspace home and project overview. Inside a container, <span class="text-mono">layout-main</span> becomes a content-and-250px-sidebar grid at tablet widths.</p>
+  <div class="docs-demo">
+    <div class="docs-preview"><div class="container"><div class="layout-main"><main><h3 class="section-title">Primary content</h3><p class="text-meta">Cards and tables can be placed here when the screen needs them.</p></main><aside class="layout-sidebar"><h3 class="section-title">Project details</h3><div class="kv-list"><div class="kv-row"><span class="kv-key">Status</span><span class="kv-value">Active</span></div><div class="kv-row"><span class="kv-key">Due</span><span class="kv-value">Aug 16</span></div></div></aside></div></div></div>
+    <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;div class="container"&gt;
+  &lt;div class="layout-main"&gt;
+    &lt;main&gt;…&lt;/main&gt;
+    &lt;aside class="layout-sidebar"&gt;…&lt;/aside&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></div>
+  </div>
+</section>
