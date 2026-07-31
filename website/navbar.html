@@ -1,0 +1,59 @@
+---
+layout: layout.html
+title: Navbar
+permalink: navbar/index.html
+---
+<h1 class="docs-title">Navbar</h1>
+<p class="docs-lead">Application chrome, project context, and tabs use semantic current states.</p>
+<section class="docs-section">
+  <h2 class="docs-section-title">Primary navigation only</h2>
+  <p class="docs-copy">Use the navbar by itself on workspace-level screens. The contextual subnav is optional and should not be rendered when there is no project or section context.</p>
+  <div class="docs-demo">
+    <div class="docs-preview docs-preview-chrome">
+      <nav class="navbar" aria-label="Application">
+        <div class="navbar-inner">
+          <a class="navbar-brand" href="#primary-navigation"><span class="navbar-mark">K</span> Kioto</a>
+        </div>
+      </nav>
+    </div>
+    <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;nav class="navbar" aria-label="Application"&gt;
+  &lt;div class="navbar-inner"&gt;
+    &lt;a class="navbar-brand"&gt;&lt;span class="navbar-mark"&gt;K&lt;/span&gt; Kioto&lt;/a&gt;
+  &lt;/div&gt;
+&lt;/nav&gt;</code></div>
+  </div>
+</section>
+<section class="docs-section" id="navbar-actions">
+  <h2 class="docs-section-title">Actions</h2>
+  <p class="docs-copy">Use <span class="text-mono">navbar-actions</span> to align search, buttons, and button-like links at the end of the navbar. Choose ordinary button variants explicitly; the navbar does not change their colors.</p>
+  <div class="docs-demo">
+    <div class="docs-preview docs-preview-chrome">
+      <nav class="navbar" aria-label="Application actions">
+        <div class="navbar-inner">
+          <a class="navbar-brand" href="#navbar-actions"><span class="navbar-mark">K</span> Kioto</a>
+          <div class="navbar-actions">
+            <input class="navbar-search" type="search" placeholder="Search projects" aria-label="Search projects">
+            <a class="btn btn-dark btn-sm" href="#navbar-actions">Latest release</a>
+            <button class="btn btn-ghost btn-icon" aria-label="Notifications" type="button">●</button>
+          </div>
+        </div>
+      </nav>
+    </div>
+    <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;div class="navbar-actions"&gt;
+  &lt;input class="navbar-search" type="search" aria-label="Search projects"&gt;
+  &lt;a class="btn btn-dark btn-sm" href="/releases"&gt;Latest release&lt;/a&gt;
+  &lt;button class="btn btn-ghost btn-icon" aria-label="Notifications"&gt;…&lt;/button&gt;
+&lt;/div&gt;</code></div>
+  </div>
+</section>
+<section class="docs-section">
+  <h2 class="docs-section-title">Primary and contextual navigation</h2>
+  <p class="docs-copy">The search input compresses on small screens. Keep accessible labels on icon-only actions.</p>
+  <div class="docs-demo">
+    <div class="docs-preview docs-preview-chrome"><nav class="navbar" aria-label="Application"><div class="navbar-inner"><a class="navbar-brand" href="#navigation-shell"><span class="navbar-mark">K</span> Kioto</a><div class="navbar-actions"><input class="navbar-search" type="search" placeholder="Search projects" aria-label="Search projects"><button class="btn btn-ghost btn-icon" aria-label="Notifications" type="button">●</button></div></div></nav><div class="subnav" id="navigation-shell"><a class="subnav-back" href="#navigation-shell">← All projects</a><div class="subnav-title">Website redesign</div><div class="subnav-tabs" role="tablist" aria-label="Project sections"><a class="subnav-tab" href="#navigation-shell" aria-current="page">Overview</a><a class="subnav-tab" href="#navigation-shell">Tickets</a><a class="subnav-tab" href="#navigation-shell">Files</a><a class="subnav-tab" href="#navigation-shell">Activity</a></div></div></div>
+    <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;nav class="navbar"&gt;&lt;div class="navbar-inner"&gt;…&lt;/div&gt;&lt;/nav&gt;
+&lt;div class="subnav"&gt;&lt;div class="subnav-tabs"&gt;
+    &lt;a class="subnav-tab" aria-current="page"&gt;Overview&lt;/a&gt;
+&lt;/div&gt;&lt;/div&gt;</code></div>
+  </div>
+</section>

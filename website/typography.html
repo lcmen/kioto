@@ -1,10 +1,10 @@
 ---
 layout: layout.html
-title: Foundations
-permalink: foundations/index.html
+title: Typography
+permalink: typography/index.html
 ---
-<h1 class="docs-title">Foundations</h1>
-<p class="docs-lead">Kioto’s defaults mirror the prototype: blue chrome, cool neutral surfaces, compact type, 4px radii, and restrained shadows.</p>
+<h1 class="docs-title">Typography</h1>
+<p class="docs-lead">Compact application text, metadata, fixed-width values, and accessible links.</p>
 <section class="docs-section">
   <h2 class="docs-section-title">Typography</h2>
   <p class="docs-copy">Use semantic text classes for application copy, supporting metadata, identifiers, timestamps, and other fixed-width values.</p>
@@ -21,31 +21,35 @@ permalink: foundations/index.html
 &lt;p class="text-mono"&gt;PRJ-1042 · 02:16:49 · 8f3a21c&lt;/p&gt;</code></div>
   </div>
 </section>
-<section class="docs-section">
+<section class="docs-section" id="typography-code-blocks">
+  <h2 class="docs-section-title">Code blocks</h2>
+  <p class="docs-copy">Use a code block for multiline commands, configuration, and other preformatted text. Long lines scroll horizontally without widening the page.</p>
+  <div class="docs-demo">
+    <div class="docs-preview">
+      <pre class="code-block"><code># Procfile
+web: bin/rails server
+worker: bundle exec sidekiq
+css: bin/rails tailwindcss:watch</code></pre>
+    </div>
+    <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;pre class="code-block"&gt;&lt;code&gt;# Procfile
+web: bin/rails server
+worker: bundle exec sidekiq
+css: bin/rails tailwindcss:watch&lt;/code&gt;&lt;/pre&gt;</code></div>
+  </div>
+</section>
+<section class="docs-section" id="typography-links">
   <h2 class="docs-section-title">Links</h2>
   <p class="docs-copy">The base link includes hover and keyboard-focus treatment. Compose it with text classes when it belongs to metadata or identifier content.</p>
   <div class="docs-demo">
     <div class="docs-preview docs-stack">
-      <p class="text-body">Continue to the <a class="link" href="#foundations-example">project settings</a> to update access.</p>
-      <p><a class="link" href="#foundations-example">Standalone application action</a></p>
-      <p><a class="link text-meta" href="#foundations-example">Alex Morgan · yesterday at 16:42</a></p>
-      <p><a class="link text-mono" href="#foundations-example">WEB-142</a></p>
+      <p class="text-body">Continue to the <a class="link" href="#typography-links">project settings</a> to update access.</p>
+      <p><a class="link" href="#typography-links">Standalone application action</a></p>
+      <p><a class="link text-meta" href="#typography-links">Alex Morgan · yesterday at 16:42</a></p>
+      <p><a class="link text-mono" href="#typography-links">WEB-142</a></p>
     </div>
     <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;p class="text-body"&gt;Open the &lt;a class="link" href="/settings"&gt;project settings&lt;/a&gt;.&lt;/p&gt;
 &lt;a class="link" href="/projects/new"&gt;Standalone application action&lt;/a&gt;
 &lt;a class="link text-meta" href="/activity/1"&gt;Alex Morgan · yesterday&lt;/a&gt;
 &lt;a class="link text-mono" href="/tickets/142"&gt;WEB-142&lt;/a&gt;</code></div>
   </div>
-</section>
-<section class="docs-section" id="foundations-example">
-  <h2 class="docs-section-title">Theme tokens</h2>
-  <p class="docs-copy">Primary, neutral, semantic status, surface, border, text, radius, spacing, shadow, and font values are exported through Tailwind’s theme.</p>
-  <div class="docs-swatch">
-    <div class="docs-swatch-item"><div class="docs-swatch-color swatch-primary"></div><div class="docs-swatch-label">primary-600</div></div>
-    <div class="docs-swatch-item"><div class="docs-swatch-color swatch-page"></div><div class="docs-swatch-label">page</div></div>
-    <div class="docs-swatch-item"><div class="docs-swatch-color swatch-success"></div><div class="docs-swatch-label">success-500</div></div>
-    <div class="docs-swatch-item"><div class="docs-swatch-color swatch-warning"></div><div class="docs-swatch-label">warning-500</div></div>
-    <div class="docs-swatch-item"><div class="docs-swatch-color swatch-danger"></div><div class="docs-swatch-label">danger-500</div></div>
-  </div>
-  <p class="docs-note">Place overrides after the Kioto import so normal Tailwind utilities and custom theme values remain authoritative.</p>
 </section>

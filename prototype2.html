@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>go-pty — Procfile processes with real terminals</title>
+<style>
+  /* ── tokens: lifted verbatim from the Foundry prototype ───────────────── */
+  :root {
+    --blue: #1c6cb3; --blue-dark: #17568f; --blue-darker: #124b7d;
+    --page: #f7f8f9; --ink: #333a40; --ink-soft: #7c858c;
+    --line: #e4e7e9; --line-strong: #d3d8db; --link: #1c6cb3;
+    --radius: 4px;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+    --milestone: #e8871e; --ticket: #7ca63c; --notebook: #b062a8;
+    --file: #cc3b30; --repo: #4a90c4; --time: #3aa08a;
+    /* terminal surface: --ink taken two steps darker so it still reads as family */
+    --term: #232a30; --term-bar: #1b2126; --term-line: #39434a;
+    --term-ink: #d8dde1; --term-dim: #8b969e;
+    /* process colours = the prototype's "kind" palette, lifted for dark ground */
+    --p-web: #7ab8e8; --p-worker: #a8ce6e; --p-css: #d59ecf;
+    --p-pre: #f0a44f; --p-sys: #6fd0b8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--sans); background: var(--page); color: var(--ink); font-size: 13px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  a { color: var(--link); text-decoration: none; cursor: pointer; }
+  a:hover { text-decoration: underline; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+  /* ── header ───────────────────────────────────────────────────────────── */
+  header { background: var(--blue); color: #fff; position: sticky; top: 0; z-index: 40; }
+  .hbar { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+  .htop { display: flex; align-items: center; height: 48px; gap: 14px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; color: #fff; }
+  .logo:hover { text-decoration: none; opacity: .92; }
+  .logo .mk { width: 22px; height: 22px; background: #fff; color: var(--blue); border-radius: 5px; display: grid; place-items: center; font-family: var(--mono); font-size: 11px; font-weight: 700; }
+  .nav { margin-left: 10px; display: flex; }
+  .nav a { color: #cfe2f2; padding: 6px 11px; border-radius: var(--radius); font-size: 13px; font-weight: 500; }
+  .nav a:hover { color: #fff; background: var(--blue-dark); text-decoration: none; }
+  .htools { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .ghost { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 11px; border-radius: var(--radius); background: var(--blue-dark); border: 1px solid rgba(255,255,255,.18); color: #fff; font-size: 12.5px; font-weight: 500; }
+  .ghost:hover { background: var(--blue-darker); text-decoration: none; }
+
+  /* ── hero ─────────────────────────────────────────────────────────────── */
+  .hero { max-width: 1080px; margin: 0 auto; padding: 40px 16px 22px; }
+  .hero h1 { font-size: 34px; line-height: 1.14; font-weight: 700; letter-spacing: -.02em; max-width: 20ch; }
+  .hero h1 em { font-style: normal; color: var(--blue); }
+  .hero p.lead { margin-top: 12px; font-size: 15px; line-height: 1.6; color: #55606a; max-width: 62ch; }
+  .hero .cta { margin-top: 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .hero .cta .keyhint { font-size: 12px; color: var(--ink-soft); display: inline-flex; align-items: center; gap: 6px; }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; background: #fff; color: var(--ink); border: 1px solid var(--line-strong); padding: 8px 13px; border-radius: var(--radius); font-size: 13px; font-weight: 500; }
+  .btn:hover { background: #f4f5f6; border-color: #bfc5c9; text-decoration: none; }
+  .btn.primary { background: var(--blue); color: #fff; border-color: var(--blue-dark); }
+  .btn.primary:hover { background: var(--blue-dark); }
+  .btn.sm { padding: 5px 9px; font-size: 12px; }
+
+  .kbd { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 3px; background: #fff; font-family: var(--mono); font-size: 11px; color: var(--ink); }
+  .kbd + .kbd { margin-left: 3px; }
+
+  /* ── layout + cards ───────────────────────────────────────────────────── */
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px 60px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); }
+  .card + .card { margin-top: 16px; }
+  .card-h { padding: 11px 14px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #fafbfb; border-radius: var(--radius) var(--radius) 0 0; }
+  .card-h h3 { font-size: 13px; font-weight: 700; }
+  .card-h .rt { display: flex; align-items: center; gap: 10px; }
+  .sechead { margin: 40px 0 12px; }
+  .sechead h2 { font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+  .mono { font-family: var(--mono); font-size: 12px; }
+
+  /* ── terminal (the one loud thing on the page) ─────────────────────────── */
+  .term-card.focused { box-shadow: 0 0 0 3px rgba(28,108,179,.16); border-color: var(--blue); }
+  .term { background: var(--term); color: var(--term-ink); font-family: var(--mono); font-size: 12.5px; line-height: 1.72; padding: 14px 16px; height: 396px; overflow-y: auto; cursor: text; }
+  .term::-webkit-scrollbar { width: 10px; }
+  .term::-webkit-scrollbar-thumb { background: #3b464e; border-radius: 10px; }
+  .art { color: var(--p-sys); white-space: pre; margin-bottom: 8px; font-size: 11.5px; line-height: 1.35; }
+  .ln { white-space: pre-wrap; word-break: break-word; }
+  .ln .px { display: inline-block; min-width: 10ch; padding-right: 1ch; }
+  .ln.dim { color: var(--term-dim); }
+  .ln.sep { color: var(--term-line); white-space: pre; margin: 4px 0; overflow: hidden; }
+  .px.web { color: var(--p-web); } .px.worker { color: var(--p-worker); }
+  .px.css { color: var(--p-css); } .px.pre { color: var(--p-pre); }
+  .px.sys { color: var(--p-sys); }
+  .ln.out { color: #eef1f3; }
+  .ln.err { color: #f09b92; }
+  .prompt { display: flex; align-items: baseline; gap: 0; }
+  .prompt .ps { color: var(--p-web); white-space: pre; }
+  .prompt input { flex: 1; min-width: 40px; background: transparent; border: none; color: var(--term-ink); font-family: var(--mono); font-size: 12.5px; line-height: 1.72; padding: 0; }
+  .prompt input:focus { outline: none; }
+  .tbar { display: flex; align-items: center; gap: 12px; background: var(--term-bar); border-top: 1px solid var(--term-line); padding: 7px 14px; border-radius: 0 0 var(--radius) var(--radius); font-family: var(--mono); font-size: 11px; color: var(--term-dim); flex-wrap: wrap; }
+  .tbar .mode { font-weight: 700; letter-spacing: .5px; color: #cdd5da; }
+  .tbar .hint { display: inline-flex; align-items: center; gap: 5px; }
+  .tbar .kbd { background: #2b3339; border-color: #3c464d; color: #cdd5da; height: 18px; font-size: 10.5px; }
+  .tbar .sp { margin-left: auto; }
+
+  /* ── features ─────────────────────────────────────────────────────────── */
+  .feat { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 16px; }
+  .feat .card { padding: 16px; margin-top: 0; display: flex; flex-direction: column; }
+  .feat .fic { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; margin-bottom: 11px; }
+  .feat .fic svg { width: 14px; height: 14px; }
+  .feat h3 { font-size: 13.5px; font-weight: 700; margin-bottom: 5px; }
+  .feat p { color: #55606a; font-size: 13px; line-height: 1.6; margin-bottom: 11px; }
+  .feat .cap { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-soft); display: flex; align-items: center; gap: 6px; }
+  .kind-ticket { background: #eef4e2; color: #5a7a2e; }
+  .kind-notebook { background: #f5e7f3; color: var(--notebook); }
+  .kind-repo { background: #e6f0f8; color: var(--repo); }
+  .kind-milestone { background: #f7ecd6; color: #a06d1e; }
+  .kind-time { background: #e1f2ee; color: var(--time); }
+
+  /* ── code blocks ──────────────────────────────────────────────────────── */
+  .seg { display: flex; }
+  .seg button { padding: 6px 14px; font-size: 12.5px; border: 1px solid var(--line-strong); background: #fff; color: var(--ink-soft); }
+  .seg button:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+  .seg button + button { border-left: none; }
+  .seg button:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+  .seg button.on { background: var(--blue); color: #fff; border-color: var(--blue-dark); }
+  .code { font-family: var(--mono); font-size: 12.5px; line-height: 1.85; padding: 14px 16px; white-space: pre; overflow-x: auto; color: var(--ink); }
+  .code .cm { color: var(--ink-soft); }
+  .code .k { color: var(--blue); }
+  .code .s { color: #5a7a2e; }
+  .pane { display: none; } .pane.on { display: block; }
+
+  /* ── shortcuts table ──────────────────────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; }
+  thead th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; color: var(--ink-soft); font-weight: 700; padding: 9px 14px; border-bottom: 1px solid var(--line); background: #fafbfb; }
+  tbody td { padding: 9px 14px; border-bottom: 1px solid var(--line); font-size: 13px; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.mode { width: 150px; font-weight: 600; vertical-align: top; background: #fafbfb; border-right: 1px solid var(--line); }
+  td.keys { white-space: nowrap; width: 140px; }
+  tr.gstart td { border-top: 1px solid var(--line-strong); }
+
+  /* ── process picker (prototype modal) ─────────────────────────────────── */
+  .modal-bg { position: fixed; inset: 0; background: rgba(20,30,40,.45); display: none; align-items: flex-start; justify-content: center; padding: 90px 16px; z-index: 50; }
+  .modal-bg.open { display: flex; }
+  .modal { background: #fff; border-radius: 6px; width: 100%; max-width: 420px; box-shadow: 0 12px 40px rgba(0,0,0,.25); overflow: hidden; }
+  .modal-h { padding: 14px 18px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+  .modal-h h3 { font-size: 15px; font-weight: 700; }
+  .modal-h .x { color: var(--ink-soft); font-size: 20px; line-height: 1; }
+  .picker { padding: 6px; }
+  .picker .row { display: flex; align-items: center; gap: 9px; padding: 8px 12px; border-radius: var(--radius); cursor: pointer; font-size: 13px; }
+  .picker .row .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .picker .row .cmd { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--ink-soft); }
+  .picker .row.sel { background: #eef2f5; }
+  .picker .row.sel .cmd { color: #5b666e; }
+  .modal-f { padding: 11px 18px; background: #fafbfb; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 14px; font-size: 12px; color: var(--ink-soft); }
+
+  /* ── demo + footer ────────────────────────────────────────────────────── */
+  .demo video { display: block; width: 100%; background: var(--term); border-radius: 0 0 var(--radius) var(--radius); }
+  .demo .fallback { padding: 14px; font-size: 12.5px; color: var(--ink-soft); border-top: 1px solid var(--line); }
+  footer { border-top: 1px solid var(--line); background: #fff; }
+  .foot { max-width: 1080px; margin: 0 auto; padding: 20px 16px; display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; color: var(--ink-soft); flex-wrap: wrap; }
+
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 6px; font-size: 13px; opacity: 0; transition: all .25s; z-index: 60; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 860px) {
+    .feat { grid-template-columns: 1fr; }
+    .nav { display: none; }
+    td.mode { width: auto; }
+    .hero h1 { font-size: 27px; max-width: none; }
+    .term { height: 320px; font-size: 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hbar">
+    <div class="htop">
+      <a class="logo" href="#top"><span class="mk">&gt;_</span> go-pty</a>
+      <nav class="nav">
+        <a href="#features">Features</a>
+        <a href="#install">Install</a>
+        <a href="#shortcuts">Shortcuts</a>
+        <a href="#demo">Demo</a>
+      </nav>
+      <div class="htools">
+        <a class="ghost" href="https://github.com/lcmen/go-pty/releases">Latest release</a>
+        <a class="ghost" href="https://github.com/lcmen/go-pty">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.23.49-2.7-1.07-2.7-1.07-.36-.93-.89-1.18-.89-1.18-.73-.5.05-.49.05-.49.81.06 1.23.83 1.23.83.72 1.23 1.88.87 2.34.67.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .66-.21 2.2.82a7.6 7.6 0 014 0c1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.14.46.55.38A8 8 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="hero" id="top">
+  <h1>Procfile processes. <em>Real terminals.</em></h1>
+  <p class="lead">See all process output together, then attach to any service for an interactive debugger or REPL.</p>
+  <div class="cta">
+    <a class="btn primary" href="#install">Install go-pty</a>
+    <span class="keyhint">Click the terminal, then <span class="kbd">ctrl</span><span class="kbd">]</span></span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ── live terminal ──────────────────────────────────────────────────── -->
+  <div class="card term-card" id="termCard">
+    <div class="card-h">
+      <h3 class="mono">Procfile — 2 preflights, 3 processes</h3>
+    </div>
+
+    <div class="term" id="term" onclick="focusTerm()">
+      <div class="art">  __ _  ___        _ __ | |_ _   _
+ / _` |/ _ \ _____| '_ \| __| | | |
+| (_| | (_) |_____| |_) | |_| |_| |
+ \__, |\___/      | .__/ \__|\__, |
+ |___/            |_|        |___/</div>
+      <div id="log"></div>
+    </div>
+
+    <div class="tbar">
+      <span class="mode" id="barMode">NORMAL</span>
+      <span class="hint" id="hintAttach"><span class="kbd">ctrl</span><span class="kbd">]</span> attach</span>
+      <span class="hint"><span class="kbd">↵</span> separator</span>
+      <span class="hint"><span class="kbd">ctrl</span><span class="kbd">r</span> restart</span>
+      <span class="sp" id="barFocus">click to focus</span>
+    </div>
+  </div>
+
+  <p style="margin-top:10px;font-size:12px;color:var(--ink-soft)">
+    This is a prototype, not a real shell — the keys and output mirror what go-pty does.
+  </p>
+
+  <!-- ── features ───────────────────────────────────────────────────────── -->
+  <div class="sechead" id="features">
+    <h2>Features</h2>
+  </div>
+
+  <div class="feat">
+    <div class="card">
+      <span class="fic kind-repo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>
+      <h3>Combined output</h3>
+      <p>Follow all services in one readable, color-prefixed stream instead of juggling terminal windows.</p>
+      <div class="cap">Web, workers, CSS, and more</div>
+    </div>
+
+    <div class="card">
+      <span class="fic kind-ticket"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2.5" y="4" width="19" height="16" rx="2"/><path d="M6.5 9l2.5 2.5L6.5 14M12 14h5"/></svg></span>
+      <h3>Real PTYs</h3>
+      <p>Each command runs in its own pseudo-terminal, preserving colors, readline, and interactive behavior.</p>
+      <div class="cap">Pry, debuggers, and REPLs work</div>
+    </div>
+
+    <div class="card">
+      <span class="fic kind-notebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M21 3l-8 8"/><path d="M10 4H5a2 2 0 00-2 2v13a2 2 0 002 2h13a2 2 0 002-2v-5"/></svg></span>
+      <h3>Attach on demand</h3>
+      <p>Remain in the combined view, then attach to one process only when you need direct interaction.</p>
+      <div class="cap"><span class="kbd">ctrl</span><span class="kbd">]</span> toggles attachment</div>
+    </div>
+
+    <div class="card">
+      <span class="fic kind-milestone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v13"/><path d="M7 11l5 5 5-5"/><path d="M4 20h16"/></svg></span>
+      <h3>Preflight tasks</h3>
+      <p>Run short setup or validation commands before services start by prefixing entries with an underscore.</p>
+      <div class="cap">Stop startup when setup fails</div>
+    </div>
+  </div>
+
+  <!-- ── install ────────────────────────────────────────────────────────── -->
+  <div class="sechead" id="install">
+    <h2>Quick start</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-h">
+      <div class="seg">
+        <button class="on" onclick="pane('mac', this)">macOS</button>
+        <button onclick="pane('linux', this)">Linux</button>
+        <button onclick="pane('procfile', this)">Procfile</button>
+      </div>
+      <div class="rt"><button class="btn sm" onclick="copyPane()">Copy</button></div>
+    </div>
+
+    <div class="pane on" id="pane-mac"><div class="code"><span class="cm"># Install</span>
+brew tap lcmen/extra
+brew install go-pty
+
+<span class="cm"># Run</span>
+go-pty -f Procfile</div></div>
+
+    <div class="pane" id="pane-linux"><div class="code"><span class="cm"># Install</span>
+ARCH=$(uname -m | sed <span class="s">'s/x86_64/amd64/;s/aarch64/arm64/'</span>)
+URL=https://github.com/lcmen/go-pty/releases/latest/download
+mkdir -p ~/.local/bin
+curl -fsSL $URL/go-pty-linux-$ARCH -o ~/.local/bin/go-pty
+chmod +x ~/.local/bin/go-pty
+
+<span class="cm"># Run</span>
+go-pty -f Procfile</div></div>
+
+    <div class="pane" id="pane-procfile"><div class="code"><span class="cm"># Procfile — entries starting with _ run first, in order</span>
+<span class="k">_</span>: bin/rails assets:precompile
+<span class="k">_db</span>: bin/rails db:migrate
+<span class="k">web</span>: bin/rails server
+<span class="k">worker</span>: bundle exec sidekiq</div></div>
+  </div>
+
+  <!-- ── shortcuts ──────────────────────────────────────────────────────── -->
+  <div class="sechead" id="shortcuts">
+    <h2>Shortcuts</h2>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead><tr><th>Mode</th><th>Key</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td class="mode" rowspan="4">Normal mode</td><td class="keys"><span class="kbd">↵</span></td><td>Insert a visual separator</td></tr>
+        <tr><td class="keys"><span class="kbd">ctrl</span><span class="kbd">]</span></td><td>Open process selection</td></tr>
+        <tr><td class="keys"><span class="kbd">ctrl</span><span class="kbd">c</span></td><td>Shut down and exit</td></tr>
+        <tr><td class="keys"><span class="kbd">ctrl</span><span class="kbd">r</span></td><td>Rerun preflights and restart all processes</td></tr>
+        <tr class="gstart"><td class="mode" rowspan="3">Dialog mode</td><td class="keys"><span class="kbd">↑</span><span class="kbd">↓</span></td><td>Navigate the process list</td></tr>
+        <tr><td class="keys"><span class="kbd">↵</span></td><td>Attach to the selected process</td></tr>
+        <tr><td class="keys"><span class="kbd">esc</span></td><td>Cancel</td></tr>
+        <tr class="gstart"><td class="mode">Attached mode</td><td class="keys"><span class="kbd">ctrl</span><span class="kbd">]</span></td><td>Detach and return to combined output</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── demo ───────────────────────────────────────────────────────────── -->
+  <div class="sechead" id="demo">
+    <h2>Demo</h2>
+  </div>
+
+  <div class="card demo">
+    <div class="card-h"><h3>Screencast</h3><a href="https://www.mendelowski.com/go-pty/screencast2.mp4">Open the file</a></div>
+    <video controls preload="metadata" playsinline src="https://www.mendelowski.com/go-pty/screencast2.mp4"></video>
+    <div class="fallback">Roughly 40 seconds, no audio.</div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="foot">
+    <span>Created by <a href="https://www.mendelowski.com/">Lucas Mendelowski</a></span>
+    <span>Built with <a href="https://www.mendelowski.com/bootboat/">Bootboat</a></span>
+  </div>
+</footer>
+
+<!-- ── process picker ───────────────────────────────────────────────────── -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="modal-h">
+      <h3>Select a process</h3>
+      <button class="x" onclick="closePicker()" aria-label="Cancel">×</button>
+    </div>
+    <div class="picker" id="pickerList"></div>
+    <div class="modal-f">
+      <span><span class="kbd">↑</span><span class="kbd">↓</span> navigate</span>
+      <span><span class="kbd">↵</span> attach</span>
+      <span><span class="kbd">esc</span> cancel</span>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var PROCS = [
+    { name: 'web',    cls: 'web',    color: 'var(--repo)',      cmd: 'bin/rails server' },
+    { name: 'worker', cls: 'worker', color: 'var(--ticket)',    cmd: 'bundle exec sidekiq' },
+    { name: 'css',    cls: 'css',    color: 'var(--notebook)',  cmd: 'bin/rails tailwindcss:watch' }
+  ];
+
+  var BOOT = [
+    { p: null,     c: 'sys',    t: 'Starting all process(es):' },
+    { p: '_',      c: 'pre',    t: 'bin/rails assets:precompile' },
+    { p: '_',      c: 'pre',    t: 'Compiled app/assets in 1.4s' },
+    { p: '_db',    c: 'pre',    t: 'bin/rails db:migrate' },
+    { p: '_db',    c: 'pre',    t: '== 20260728120411 AddIndexToPosts: migrated (0.0121s)' },
+    { p: 'web',    c: 'web',    t: 'Puma starting in single mode…' },
+    { p: 'worker', c: 'worker', t: 'Sidekiq 7.3.2 connected to Redis' },
+    { p: 'css',    c: 'css',    t: 'Rebuilding… done in 41ms' },
+    { p: 'web',    c: 'web',    t: 'Listening on http://127.0.0.1:3000' },
+    { p: 'worker', c: 'worker', t: 'Starting processing, hit Ctrl-C to stop' },
+    { p: 'web',    c: 'web',    t: 'Started GET "/" for 127.0.0.1' },
+    { p: 'web',    c: 'web',    t: 'Processing by PagesController#home as HTML' }
+  ];
+
+  var AMBIENT = [
+    { p: 'css',    c: 'css',    t: 'Rebuilding… done in 38ms' },
+    { p: 'worker', c: 'worker', t: 'HardWorker JID-8f2a1c done: 0.031 sec' },
+    { p: 'web',    c: 'web',    t: 'Completed 200 OK in 24ms (Views: 18.2ms)' },
+    { p: 'worker', c: 'worker', t: 'MailerJob JID-31be07 start' }
+  ];
+
+  var ATTACH_INTRO = [
+    { p: null, c: 'sys',  t: 'Attached to web (ctrl+] to detach)' },
+    { p: null, c: 'dim',  t: 'From: app/controllers/pages_controller.rb:6 PagesController#home:' },
+    { p: null, c: 'dim',  t: '    4: def home' },
+    { p: null, c: 'dim',  t: '    5:   @posts = Post.recent' },
+    { p: null, c: 'out',  t: ' => 6:   binding.pry' },
+    { p: null, c: 'dim',  t: '    7: end' }
+  ];
+
+  var REPLIES = {
+    'params': '=> #<ActionController::Parameters {"controller"=>"pages", "action"=>"home"}>',
+    'self': '=> #<PagesController:0x0000000110a3f28>',
+    '@posts.count': '=> 3',
+    '@posts': '=> [#<Post id: 41>, #<Post id: 40>, #<Post id: 38>]',
+    'ls': 'self.methods: home  index\ninstance variables: @posts  @_request  @_response',
+    'whereami': 'From: app/controllers/pages_controller.rb:6 PagesController#home',
+    'help': 'Type an expression to evaluate it. "continue" resumes, "exit" leaves the session.'
+  };
+
+  var mode = 'normal', attached = null, promptN = 1, sel = 0;
+  var focused = false, bootTimer = null, ambientTimer = null;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var term = document.getElementById('term'), log = document.getElementById('log');
+
+  function esc(s){ return s.replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function toast(msg){ var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(function(){ t.classList.remove('show'); }, 2200); }
+  function bottom(){ term.scrollTop = term.scrollHeight; }
+
+  function line(o){
+    var div = document.createElement('div');
+    div.className = 'ln' + (o.c === 'dim' ? ' dim' : '') + (o.c === 'out' ? ' out' : '') + (o.c === 'err' ? ' err' : '');
+    var body = esc(o.t);
+    if (o.p) div.innerHTML = '<span class="px ' + o.c + '">' + esc(o.p) + '</span>' + body;
+    else if (o.c === 'sys') div.innerHTML = '<span class="px sys">[go-pty]</span>' + body;
+    else div.innerHTML = body;
+    log.appendChild(div);
+    bottom();
+    return div;
+  }
+
+  function separator(){
+    var div = document.createElement('div');
+    div.className = 'ln sep';
+    div.textContent = '─'.repeat(72);
+    log.appendChild(div); bottom();
+  }
+
+  /* ── boot ───────────────────────────────────────────────────────────── */
+  function boot(){
+    clearTimeout(bootTimer); clearInterval(ambientTimer);
+    log.innerHTML = ''; promptN = 1;
+    if (reduce) { BOOT.forEach(line); startAmbient(); return; }
+    var i = 0;
+    (function next(){
+      if (i >= BOOT.length) { startAmbient(); return; }
+      line(BOOT[i++]);
+      bootTimer = setTimeout(next, i < 3 ? 260 : 150 + Math.random() * 220);
+    })();
+  }
+
+  function startAmbient(){
+    clearInterval(ambientTimer);
+    if (reduce) return;
+    ambientTimer = setInterval(function(){
+      if (mode !== 'normal') return;
+      line(AMBIENT[Math.floor(Math.random() * AMBIENT.length)]);
+      if (log.children.length > 120) log.removeChild(log.firstChild);
+    }, 4200);
+  }
+
+  function restart(){
+    if (mode === 'attached') detach(true);
+    closePicker();
+    line({ p: null, c: 'sys', t: 'Rerunning preflights and restarting all processes…' });
+    setTimeout(boot, reduce ? 0 : 450);
+    toast('Restarted 3 processes');
+  }
+
+  /* ── focus model: the terminal only takes keys once you click it ─────── */
+  function focusTerm(scroll){
+    focused = true;
+    document.getElementById('termCard').classList.add('focused');
+    document.getElementById('barFocus').textContent = 'focused — keys are live';
+    if (scroll) document.getElementById('termCard').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+    var inp = document.getElementById('pryInput'); if (inp) inp.focus();
+  }
+  function blurTerm(){
+    focused = false;
+    document.getElementById('termCard').classList.remove('focused');
+    document.getElementById('barFocus').textContent = 'click to focus';
+  }
+  document.addEventListener('mousedown', function(e){
+    if (document.getElementById('modalBg').classList.contains('open')) return;
+    if (!document.getElementById('termCard').contains(e.target)) blurTerm();
+  });
+
+  /* ── mode plumbing ──────────────────────────────────────────────────── */
+  function setMode(m){
+    mode = m;
+    var labels = { normal: 'NORMAL', dialog: 'DIALOG', attached: 'ATTACHED' };
+    document.getElementById('barMode').textContent = labels[m] + (attached ? ' · ' + attached : '');
+    document.getElementById('hintAttach').innerHTML = m === 'attached'
+      ? '<span class="kbd">ctrl</span><span class="kbd">]</span> detach'
+      : '<span class="kbd">ctrl</span><span class="kbd">]</span> attach';
+  }
+
+  /* ── picker ─────────────────────────────────────────────────────────── */
+  function openPicker(){
+    if (mode === 'attached') { detach(); return; }
+    sel = 0; renderPicker();
+    document.getElementById('modalBg').classList.add('open');
+    setMode('dialog'); focusTerm();
+  }
+  function renderPicker(){
+    document.getElementById('pickerList').innerHTML = PROCS.map(function(p, i){
+      return '<div class="row' + (i === sel ? ' sel' : '') + '" onmouseenter="sel=' + i + ';renderPicker()" onclick="attach(\'' + p.name + '\')">' +
+             '<span class="dot" style="background:' + p.color + '"></span>' + p.name +
+             '<span class="cmd">' + esc(p.cmd) + '</span></div>';
+    }).join('');
+  }
+  function closePicker(){
+    document.getElementById('modalBg').classList.remove('open');
+    if (mode === 'dialog') setMode('normal');
+  }
+  document.getElementById('modalBg').addEventListener('mousedown', function(e){ if (e.target.id === 'modalBg') closePicker(); });
+
+  /* ── attach / detach ────────────────────────────────────────────────── */
+  function attach(name){
+    closePicker();
+    attached = name; setMode('attached');
+    separator();
+    if (name === 'web') {
+      ATTACH_INTRO.forEach(line);
+      showPrompt();
+    } else {
+      line({ p: null, c: 'sys', t: 'Attached to ' + name + ' (ctrl+] to detach)' });
+      line({ p: null, c: 'dim', t: name === 'worker' ? 'Waiting for jobs — nothing to type here right now.' : 'Watching app/assets for changes.' });
+      line({ p: null, c: 'dim', t: 'Other processes keep running; their output resumes when you detach.' });
+    }
+    focusTerm();
+    toast('Attached to ' + name);
+  }
+
+  function showPrompt(){
+    var wrap = document.createElement('div');
+    wrap.className = 'prompt'; wrap.id = 'promptRow';
+    wrap.innerHTML = '<span class="ps">[' + promptN + '] pry(#&lt;PagesController&gt;)&gt; </span>' +
+                     '<input id="pryInput" autocomplete="off" spellcheck="false" aria-label="pry input">';
+    log.appendChild(wrap); bottom();
+    var inp = document.getElementById('pryInput');
+    inp.focus();
+    inp.addEventListener('keydown', function(e){
+      if (e.key === 'Enter') { e.preventDefault(); submitPry(inp.value); }
+    });
+  }
+
+  function submitPry(raw){
+    var cmd = raw.trim();
+    var row = document.getElementById('promptRow');
+    row.outerHTML = '<div class="ln"><span class="ps" style="color:var(--p-web)">[' + promptN + '] pry(#&lt;PagesController&gt;)&gt; </span>' + esc(cmd) + '</div>';
+    promptN++;
+    if (!cmd) { showPrompt(); return; }
+    if (cmd === 'exit' || cmd === 'continue' || cmd === 'c') {
+      line({ p: null, c: 'dim', t: 'Resuming request…' });
+      detach(); return;
+    }
+    var reply = REPLIES[cmd];
+    if (reply) reply.split('\n').forEach(function(l){ line({ p: null, c: 'out', t: l }); });
+    else line({ p: null, c: 'err', t: 'NameError: undefined local variable or method \'' + cmd + '\' for an instance of PagesController' });
+    showPrompt();
+  }
+
+  function detach(silent){
+    var row = document.getElementById('promptRow'); if (row) row.remove();
+    var was = attached;
+    attached = null; setMode('normal');
+    if (!silent) {
+      line({ p: null, c: 'sys', t: 'Detached from ' + was + ' — back to combined output' });
+      separator();
+      line({ p: 'web', c: 'web', t: 'Completed 200 OK in 4212ms (Views: 21.0ms | ActiveRecord: 1.9ms)' });
+      toast('Detached from ' + was);
+    }
+    startAmbient();
+  }
+
+  /* ── keys ───────────────────────────────────────────────────────────── */
+  document.addEventListener('keydown', function(e){
+    var open = document.getElementById('modalBg').classList.contains('open');
+
+    if (open) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); sel = (sel + 1) % PROCS.length; renderPicker(); }
+      if (e.key === 'ArrowUp')   { e.preventDefault(); sel = (sel - 1 + PROCS.length) % PROCS.length; renderPicker(); }
+      if (e.key === 'Enter')     { e.preventDefault(); attach(PROCS[sel].name); }
+      if (e.key === 'Escape')    { e.preventDefault(); closePicker(); }
+      return;
+    }
+
+    if (!focused) return;
+
+    if (e.ctrlKey && e.key === ']') { e.preventDefault(); mode === 'attached' ? detach() : openPicker(); return; }
+    if (e.ctrlKey && (e.key === 'r' || e.key === 'R')) { e.preventDefault(); restart(); return; }
+    if (mode === 'normal' && e.key === 'Enter') { e.preventDefault(); separator(); return; }
+    if (mode === 'normal' && e.ctrlKey && e.key === 'c') {
+      if (window.getSelection && String(window.getSelection()).length) return; /* let a real copy through */
+      e.preventDefault();
+      line({ p: null, c: 'sys', t: 'Shutting down 3 process(es)…' });
+      line({ p: 'web', c: 'web', t: '- Gracefully stopping, waiting for requests to finish' });
+      line({ p: 'worker', c: 'worker', t: 'Bye!' });
+      line({ p: null, c: 'sys', t: 'All processes stopped. Press Restart to boot again.' });
+      clearInterval(ambientTimer);
+      return;
+    }
+  });
+
+  /* ── install tabs + copy ────────────────────────────────────────────── */
+  var curPane = 'mac';
+  function pane(name, btn){
+    curPane = name;
+    document.querySelectorAll('.pane').forEach(function(p){ p.classList.toggle('on', p.id === 'pane-' + name); });
+    btn.parentNode.querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b === btn); });
+  }
+  function copyPane(){
+    var txt = document.querySelector('#pane-' + curPane + ' .code').innerText;
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(function(){ toast('Copied to clipboard'); }, fallback);
+    else fallback();
+    function fallback(){
+      var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta);
+      ta.select(); try { document.execCommand('copy'); toast('Copied to clipboard'); } catch (err) { toast('Copy failed — select the text instead'); }
+      document.body.removeChild(ta);
+    }
+  }
+
+  setMode('normal');
+  boot();
+</script>
+</body>
+</html>

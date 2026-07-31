@@ -53,17 +53,7 @@
 .docs-modal-stage .modal-overlay { position: absolute; }
 .docs-toast-stage { position: relative; min-height: 8rem; background: var(--color-neutral-100); }
 .docs-toast-stage .toast { position: absolute; }
-.docs-swatch { display: grid; grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr)); gap: .5rem; }
-.docs-swatch-item { border: 1px solid var(--color-border); border-radius: var(--radius-kioto); overflow: hidden; font-size: .7rem; }
-.docs-swatch-color { height: 2.25rem; }
-.docs-swatch-label { padding: .35rem .5rem; background: white; }
 .docs-simple-app { overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-kioto); box-shadow: var(--shadow-kioto); }
-.swatch-primary { background: var(--color-primary-600); }
-.swatch-page { background: var(--color-page); }
-.swatch-success { background: var(--color-success-500); }
-.swatch-warning { background: var(--color-warning-500); }
-.swatch-danger { background: var(--color-danger-500); }
-.chrome-action { color: white; }
 .progress-72 { width: 72%; }
 .progress-45 { width: 45%; }
 .progress-25 { width: 25%; }
