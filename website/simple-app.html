@@ -7,7 +7,7 @@ permalink: simple-app/index.html
 <p class="docs-lead">A representative project workspace assembled entirely from Kioto’s public component classes. The data is illustrative; domain widgets remain outside the library.</p>
 <div class="docs-simple-app">
   <nav class="navbar" aria-label="Simple app">
-    <div class="navbar-inner">
+    <div class="container container-narrow navbar-inner">
       <a class="navbar-brand" href="#simple-app-main"><span class="navbar-mark">F</span> Foundry</a>
       <div class="navbar-actions">
         <input class="navbar-search" type="search" placeholder="Search" aria-label="Search workspace">
@@ -16,17 +16,19 @@ permalink: simple-app/index.html
     </div>
   </nav>
   <div class="subnav">
-    <a class="subnav-back" href="#simple-app-main">← All projects</a>
-    <div class="subnav-title">Website redesign</div>
-    <nav class="subnav-tabs" aria-label="Project sections">
+    <div class="container container-narrow subnav-inner">
+      <a class="subnav-back" href="#simple-app-main">← All projects</a>
+      <div class="subnav-title">Website redesign</div>
+      <nav class="subnav-tabs" aria-label="Project sections">
       <a class="subnav-tab" href="#simple-app-main" aria-current="page">Overview</a>
       <a class="subnav-tab" href="#simple-app-main">Tickets</a>
       <a class="subnav-tab" href="#simple-app-main">Files</a>
       <a class="subnav-tab" href="#simple-app-main">Notes</a>
       <a class="subnav-tab" href="#simple-app-main">Activity</a>
-    </nav>
+      </nav>
+    </div>
   </div>
-  <div class="container pb-4" id="simple-app-main">
+  <div class="container container-narrow pb-4" id="simple-app-main">
     <header class="page-header">
       <h2 class="page-header-title">Project overview</h2>
       <div class="page-header-actions"><div class="btn-group" aria-label="View"><button class="btn-group-item" aria-selected="true" type="button">List</button><button class="btn-group-item" aria-selected="false" type="button">Calendar</button></div><button class="btn btn-primary" type="button">New ticket</button></div>

@@ -20,10 +20,10 @@ permalink: layout/index.html
 </section>
 <section class="docs-section" id="layout-example">
   <h2 class="docs-section-title">Main and sidebar</h2>
-  <p class="docs-copy">This mirrors the prototype’s unbordered two-column layout used on the workspace home and project overview. Inside a container, <span class="text-mono">layout-main</span> becomes a content-and-250px-sidebar grid at tablet widths.</p>
+  <p class="docs-copy">The Tailwind <span class="text-mono">container</span> keeps its responsive widths. Kioto adds centering and horizontal padding. Add <span class="text-mono">container-narrow</span> to cap its width at 1080px. Inside it, <span class="text-mono">layout-main</span> becomes a content-and-250px-sidebar grid at tablet widths.</p>
   <div class="docs-demo">
-    <div class="docs-preview"><div class="container"><div class="layout-main"><main><h3 class="section-title">Primary content</h3><p class="text-meta">Cards and tables can be placed here when the screen needs them.</p></main><aside class="layout-sidebar"><h3 class="section-title">Project details</h3><div class="kv-list"><div class="kv-row"><span class="kv-key">Status</span><span class="kv-value">Active</span></div><div class="kv-row"><span class="kv-key">Due</span><span class="kv-value">Aug 16</span></div></div></aside></div></div></div>
-    <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;div class="container"&gt;
+    <div class="docs-preview"><div class="container container-narrow"><div class="layout-main"><main><h3 class="section-title">Primary content</h3><p class="text-meta">Cards and tables can be placed here when the screen needs them.</p></main><aside class="layout-sidebar"><h3 class="section-title">Project details</h3><div class="kv-list"><div class="kv-row"><span class="kv-key">Status</span><span class="kv-value">Active</span></div><div class="kv-row"><span class="kv-key">Due</span><span class="kv-value">Aug 16</span></div></div></aside></div></div></div>
+    <div class="docs-code-wrap"><button class="docs-copy-button" data-copy type="button">Copy</button><code class="docs-code">&lt;div class="container container-narrow"&gt;
   &lt;div class="layout-main"&gt;
     &lt;main&gt;…&lt;/main&gt;
     &lt;aside class="layout-sidebar"&gt;…&lt;/aside&gt;

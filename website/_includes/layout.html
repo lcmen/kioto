@@ -15,7 +15,7 @@
     <div class="docs-backdrop" x-cloak x-show="navigationOpen" @click="navigationOpen = false"></div>
     {% include "nav.html" %}
     <div class="docs-content">
-      <main class="docs-main">
+      <main class="docs-main{% if page.url == '/simple-app/' %} docs-main-wide{% endif %}">
         {{ content }}
       </main>
       <footer class="docs-footer">

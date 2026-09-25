@@ -54,12 +54,16 @@
   --shadow-kioto-overlay: 0 12px 40px rgb(0 0 0 / 0.25);
 }
 
-@utility page-shell {
-  :where(&) { @apply min-h-screen bg-page font-sans text-[13px] leading-5 text-text antialiased; }
+@utility container {
+  :where(&) { @apply mx-auto px-4; }
 }
 
-@utility container {
-  :where(&) { @apply mx-auto w-full max-w-[1080px] px-4; }
+@utility container-narrow {
+  &.container { max-width: 1080px; }
+}
+
+@utility page-shell {
+  :where(&) { @apply min-h-screen bg-page font-sans text-[13px] leading-5 text-text antialiased; }
 }
 
 @utility layout-main {
@@ -107,7 +111,7 @@
 }
 
 @utility navbar-inner {
-  :where(&) { @apply mx-auto flex min-h-12 w-full max-w-[1080px] items-center gap-3.5 px-4; }
+  :where(&) { @apply flex min-h-12 items-center gap-3.5; }
 }
 
 @utility navbar-brand {
@@ -128,24 +132,30 @@
 
 @utility subnav {
   :where(&) {
-    @apply grid w-full grid-cols-[minmax(1rem,1fr)_minmax(0,1080px)_minmax(1rem,1fr)] items-end bg-primary-600 text-white;
+    @apply w-full bg-primary-600 text-white;
+  }
+}
+
+@utility subnav-inner {
+  :where(&) {
+    @apply grid grid-cols-[minmax(0,1fr)] items-end;
   }
 }
 
 @utility subnav-back {
-  :where(&) { @apply col-start-2 inline-flex w-fit items-center gap-1 py-1 text-xs text-primary-200 no-underline hover:text-white; }
+  :where(&) { @apply col-start-1 row-start-1 inline-flex w-fit items-center gap-1 py-1 text-xs text-primary-200 no-underline hover:text-white; }
 }
 
 @utility subnav-title {
   :where(&) {
-    @apply col-start-2 row-start-2 flex min-w-0 items-center gap-3 pb-3 text-[22px] font-bold leading-7;
+    @apply col-start-1 row-start-2 flex min-w-0 items-center gap-3 pb-3 text-[22px] font-bold leading-7;
     padding-right: calc(min(65%, 44rem) + 1rem);
   }
 }
 
 @utility subnav-tabs {
   :where(&) {
-    @apply col-start-2 row-start-2 flex justify-self-end gap-0 overflow-x-auto [scrollbar-width:none];
+    @apply col-start-1 row-start-2 flex justify-self-end gap-0 overflow-x-auto [scrollbar-width:none];
     max-width: min(65%, 44rem);
   }
 }
